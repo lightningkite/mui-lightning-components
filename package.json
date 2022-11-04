@@ -15,14 +15,13 @@
   "scripts": {
     "build": "rimraf dist && rollup --config",
     "tsc": "tsc",
-    "test": "jest",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook",
     "prepublishOnly": "npm run build"
   },
   "author": "Troy DeSpain",
   "license": "ISC",
   "peerDependencies": {
+    "@emotion/react": ">=11.10.5",
+    "@emotion/styled": ">=11.10.5",
     "@lightningkite/lightning-server-simplified": ">=0.3.0",
     "@mui/material": ">=5.10.12",
     "@mui/x-date-pickers": ">=5.0.7",
@@ -44,12 +43,6 @@
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^13.0.6",
-    "@storybook/addon-actions": "^6.4.8",
-    "@storybook/addon-essentials": "^6.4.8",
-    "@storybook/addon-links": "^6.4.8",
-    "@storybook/react": "^6.4.8",
-    "@testing-library/react": "^12.1.2",
-    "@types/jest": "^27.0.3",
     "@types/react": "^17.0.14",
     "@types/react-dom": "^18.0.8",
     "babel-loader": "^8.2.2",
