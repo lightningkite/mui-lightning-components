@@ -19,7 +19,7 @@ export interface RestAutocompleteInputProps<
   Multiple extends boolean | undefined
 > {
   /** The model rest endpoint to fetch options from */
-  apiEndpoint: SessionRestEndpoint<T>;
+  restEndpoint: SessionRestEndpoint<T>;
   /** True to allow the user to select multiple options */
   multiple?: Multiple;
   /** Additional conditions to filter the values when requested from the endpoint */
@@ -59,7 +59,7 @@ export function RestAutocompleteInput<
   Multiple extends boolean | undefined = undefined
 >(props: RestAutocompleteInputProps<T, Multiple>): ReactElement {
   const {
-    apiEndpoint,
+    restEndpoint,
     multiple = undefined,
     getOptionLabel,
     getOptionDisabled,
@@ -98,7 +98,7 @@ export function RestAutocompleteInput<
       conditions.push({ _id: { NotInside: alreadySelected } });
     }
 
-    apiEndpoint
+    restEndpoint
       .query({
         condition: {
           And: conditions,
@@ -109,7 +109,7 @@ export function RestAutocompleteInput<
       .finally(() => setFetching(false));
   }, [
     throttledInputText,
-    apiEndpoint,
+    restEndpoint,
     ...dependencies,
     ...(Array.isArray(value) ? [value.length] : []),
   ]);

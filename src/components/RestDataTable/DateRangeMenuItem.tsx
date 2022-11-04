@@ -74,6 +74,7 @@ const DateRangeMenuItem: FC<DateRangeMenuItemProps> = (props) => {
             spacing={1}
             alignItems="center"
             divider={<Remove />}
+            pt="1rem"
           >
             <DatePicker
               label="Start Date"

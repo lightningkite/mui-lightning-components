@@ -29,13 +29,12 @@ export interface DataTableSelectAction {
 
 // For details on configuring the columns prop, see https://v4.mui.com/components/data-grid/columns/#headers
 export interface RestDataTableProps<T extends HasId> {
-  apiEndpoint: SessionRestEndpoint<T>;
+  restEndpoint: SessionRestEndpoint<T>;
   columns: GridColDef<T>[];
-  handleRowClick?: (item: T) => void;
+  onRowClick?: (item: T) => void;
   additionalQueryConditions?: Condition<T>[];
-  disableSearch?: boolean;
   dependencies?: unknown[];
-  searchColumns?: (keyof T)[];
+  searchFields?: (keyof T)[];
   defaultSorting?: GridSortModel;
   multiselectActions?: DataTableSelectAction[];
   loading?: boolean;
@@ -45,12 +44,12 @@ export function RestDataTable<T extends HasId>(
   props: RestDataTableProps<T>
 ): ReactElement | null {
   const {
-    handleRowClick,
+    onRowClick,
     additionalQueryConditions,
-    apiEndpoint,
+    restEndpoint,
     columns,
     dependencies,
-    searchColumns,
+    searchFields,
     defaultSorting = [],
     multiselectActions,
     loading: externalLoading,
@@ -72,13 +71,13 @@ export function RestDataTable<T extends HasId>(
   const customToolbarProps: ToolbarProps = {
     selectActions: multiselectActions,
     selectionModel,
-    showQuickFilter: !!searchColumns?.length,
+    showQuickFilter: !!searchFields?.length,
     dateRangeFilter,
     setDateRangeFilter,
     searchHeaderNames: (() => {
-      const searchColumnStrings = searchColumns?.map((c) => c.toString()) || [];
+      const searchFieldstrings = searchFields?.map((c) => c.toString()) || [];
       return columns
-        .filter((c) => searchColumnStrings.includes(c.field))
+        .filter((c) => searchFieldstrings.includes(c.field))
         .map((c) => c.headerName?.toLowerCase())
         .filter((name) => name !== undefined) as string[];
     })(),
@@ -95,7 +94,7 @@ export function RestDataTable<T extends HasId>(
   useEffect(() => {
     const conditions = [
       ...(additionalQueryConditions || []),
-      ...makeSearchConditions(filterModel.quickFilterValues, searchColumns),
+      ...makeSearchConditions(filterModel.quickFilterValues, searchFields),
     ];
 
     if (dateRangeFilter) {
@@ -140,7 +139,7 @@ export function RestDataTable<T extends HasId>(
   }, [
     additionalQueryConditions,
     filterModel,
-    searchColumns,
+    searchFields,
     dateRangeFilter,
     dependencies,
     columns,
@@ -148,8 +147,8 @@ export function RestDataTable<T extends HasId>(
 
   useEffect(() => {
     setPage(0);
-    queryCondition && apiEndpoint.count(queryCondition).then(setTotalItems);
-  }, [apiEndpoint, queryCondition]);
+    queryCondition && restEndpoint.count(queryCondition).then(setTotalItems);
+  }, [restEndpoint, queryCondition]);
 
   useEffect(() => {
     if (!queryCondition) return;
@@ -162,7 +161,7 @@ export function RestDataTable<T extends HasId>(
         return s.field;
       }) as Query<T>["orderBy"];
 
-    apiEndpoint
+    restEndpoint
       .query({
         condition: queryCondition,
         skip: page * pageSize,
@@ -172,7 +171,7 @@ export function RestDataTable<T extends HasId>(
       .then(setItems)
       .catch(() => setItems(null))
       .finally(() => setLoading(false));
-  }, [apiEndpoint, page, pageSize, queryCondition, sortModel]);
+  }, [restEndpoint, page, pageSize, queryCondition, sortModel]);
 
   const processedColumns = (() => {
     const temp: GridColumns<T> = columns.map((c) => ({
@@ -226,7 +225,7 @@ export function RestDataTable<T extends HasId>(
           onPageChange={setPage}
           autoHeight
           getRowId={(row) => row._id}
-          onRowClick={(params) => handleRowClick && handleRowClick(params.row)}
+          onRowClick={(params) => onRowClick && onRowClick(params.row)}
           loading={externalLoading || loading || totalItems === undefined}
           pagination
           paginationMode="server"
@@ -261,12 +260,12 @@ export function RestDataTable<T extends HasId>(
               fontWeight: "bold",
             },
             "& .MuiDataGrid-row:active": {
-              backgroundColor: handleRowClick
+              backgroundColor: onRowClick
                 ? "rgba(0, 0, 0, 0.1) !important"
                 : undefined,
             },
             "& .MuiDataGrid-row:hover": {
-              backgroundColor: handleRowClick ? "rgba(0, 0, 0, 0.04)" : "unset",
+              backgroundColor: onRowClick ? "rgba(0, 0, 0, 0.04)" : "unset",
             },
             "& .MuiDataGrid-row.Mui-selected": {
               backgroundColor: "rgb(236, 240, 243)",
@@ -275,7 +274,7 @@ export function RestDataTable<T extends HasId>(
               backgroundColor: "rgb(236, 240, 243)",
             },
             "& .MuiDataGrid-row": {
-              cursor: handleRowClick ? "pointer" : undefined,
+              cursor: onRowClick ? "pointer" : undefined,
             },
             "& .MuiDataGrid-cell, .MuiDataGrid-columnHeader": {
               outline: "none !important",
