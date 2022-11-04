@@ -1,6 +1,6 @@
 {
   "name": "@lightningkite/mui-lightning-components",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "MUI based React components to use in projects with a Lightning Server backend",
   "repository": {
     "type": "git",
@@ -23,7 +23,9 @@
     "@emotion/react": ">=11.10.5",
     "@emotion/styled": ">=11.10.5",
     "@lightningkite/lightning-server-simplified": ">=0.3.0",
+    "@mui/icons-material": "^5.10.9",
     "@mui/material": ">=5.10.12",
+    "@mui/x-data-grid": "^5.17.10",
     "@mui/x-date-pickers": ">=5.0.7",
     "dayjs": ">=1.11.6",
     "formik": ">=2.2.9",
