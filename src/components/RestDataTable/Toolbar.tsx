@@ -5,7 +5,7 @@ import {
   GridToolbarContainer,
   GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
-import HoverHelp from "components/HoverHelp";
+import { HoverHelp } from "components";
 import React, { FC, useState } from "react";
 import { DateRangeFilter } from "./DateRangeMenuItem";
 import { DataTableSelectAction } from "./RestDataTable";

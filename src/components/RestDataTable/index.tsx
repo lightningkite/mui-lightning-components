@@ -1,1 +1,1 @@
-export * from "./RestDataTable"
+export * from "./RestDataTable";

@@ -1,30 +1,30 @@
-import {Box, SxProps, Theme} from "@mui/material"
-import Tooltip from "@mui/material/Tooltip"
-import React, {FC, useEffect, useState} from "react"
+import { Box, SxProps, Theme } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
+import React, { FC, useEffect, useState } from "react";
 
 export interface HoverHelpProps {
-  description: string
+  description: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  children: React.ReactElement<any, any>
+  children: React.ReactElement<any, any>;
   /**
    * Wrap the children in a Box component to enable compatibility with custom components
    * @default false
    */
-  enableWrapper?: boolean
+  enableWrapper?: boolean;
   /** Sx props passed to the wrapper component if enabled */
-  sx?: SxProps<Theme>
+  sx?: SxProps<Theme>;
 }
 
-const HoverHelp: FC<HoverHelpProps> = (props) => {
-  const {description, children, enableWrapper = false, sx} = props
-  const [open, setOpen] = useState(false)
+export const HoverHelp: FC<HoverHelpProps> = (props) => {
+  const { description, children, enableWrapper = false, sx } = props;
+  const [open, setOpen] = useState(false);
 
-  const handleClick = () => setOpen(false)
+  const handleClick = () => setOpen(false);
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
-  }, [])
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
     <Tooltip
@@ -38,7 +38,5 @@ const HoverHelp: FC<HoverHelpProps> = (props) => {
     >
       {enableWrapper ? <Box sx={sx}>{children}</Box> : children}
     </Tooltip>
-  )
-}
-
-export default HoverHelp
+  );
+};

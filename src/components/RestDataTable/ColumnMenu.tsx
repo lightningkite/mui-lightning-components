@@ -2,19 +2,20 @@ import {
   GridColumnMenuProps,
   GridColumnMenuContainer,
   SortGridMenuItems,
-  GridFilterMenuItem
-} from "@mui/x-data-grid"
-import React, {forwardRef} from "react"
-import DateRangeMenuItem, {DateRangeFilter} from "./DateRangeMenuItem"
+  GridFilterMenuItem,
+} from "@mui/x-data-grid";
+import React, { forwardRef } from "react";
+import DateRangeMenuItem, { DateRangeFilter } from "./DateRangeMenuItem";
 
 export interface ColumnMenuProps extends GridColumnMenuProps {
-  dateRangeFilter?: DateRangeFilter
-  setDateRangeFilter: (dateRange: DateRangeFilter | undefined) => void
+  dateRangeFilter?: DateRangeFilter;
+  setDateRangeFilter: (dateRange: DateRangeFilter | undefined) => void;
 }
 
 const ColumnMenu = forwardRef<HTMLUListElement, ColumnMenuProps>(
   function GridColumnMenu(props: ColumnMenuProps, ref) {
-    const {hideMenu, currentColumn, dateRangeFilter, setDateRangeFilter} = props
+    const { hideMenu, currentColumn, dateRangeFilter, setDateRangeFilter } =
+      props;
 
     return (
       <GridColumnMenuContainer ref={ref} {...props}>
@@ -27,7 +28,7 @@ const ColumnMenu = forwardRef<HTMLUListElement, ColumnMenuProps>(
             initialDateRangeFilter={
               dateRangeFilter?.field === currentColumn.field
                 ? dateRangeFilter
-                : {field: currentColumn.field}
+                : { field: currentColumn.field }
             }
             saveDateRangeFilter={(filter) =>
               setDateRangeFilter(
@@ -37,8 +38,8 @@ const ColumnMenu = forwardRef<HTMLUListElement, ColumnMenuProps>(
           />
         )}
       </GridColumnMenuContainer>
-    )
+    );
   }
-)
+);
 
-export default ColumnMenu
+export default ColumnMenu;
