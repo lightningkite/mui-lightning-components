@@ -1,7 +1,11 @@
 {
   "name": "@lightningkite/mui-lightning-components",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MUI based React components to use in projects with a Lightning Server backend",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lightningkite/mui-lightning-components.git"
+  },
   "main": "dist/index.js",
   "browser": "dist/index.js",
   "module": "dist/index.esm.js",
