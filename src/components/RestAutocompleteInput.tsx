@@ -100,9 +100,7 @@ export function RestAutocompleteInput<
 
     restEndpoint
       .query({
-        condition: {
-          And: conditions,
-        },
+        condition: conditions.length ? { And: conditions } : { Always: true },
         limit: 10,
       })
       .then(setOptions)

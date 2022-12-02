@@ -1,4 +1,5 @@
 import {
+  condition,
   Condition,
   HasId,
   Query,
@@ -18,14 +19,11 @@ import dayjs from "dayjs";
 import React, { ReactElement, useEffect, useState } from "react";
 import ColumnMenu, { ColumnMenuProps } from "./ColumnMenu";
 import { DateRangeFilter } from "./DateRangeMenuItem";
-import RestDataTableToolbar, { ToolbarProps } from "./Toolbar";
+import RestDataTableToolbar, {
+  DataTableSelectAction,
+  ToolbarProps,
+} from "./Toolbar";
 import { makeSearchConditions } from "utils/miscHelpers";
-
-export interface DataTableSelectAction {
-  label: string;
-  action: (itemIds: string[]) => void | Promise<unknown>;
-  icon?: ReactElement;
-}
 
 // For details on configuring the columns prop, see https://v4.mui.com/components/data-grid/columns/#headers
 export interface RestDataTableProps<T extends HasId> {
@@ -133,9 +131,9 @@ export function RestDataTable<T extends HasId>(
       }
     }
 
-    setQueryCondition({
-      And: conditions,
-    });
+    setQueryCondition(
+      conditions.length ? { And: conditions } : { Always: true }
+    );
   }, [
     additionalQueryConditions,
     filterModel,

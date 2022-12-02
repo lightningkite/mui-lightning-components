@@ -5,11 +5,15 @@ import {
   GridToolbarContainer,
   GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
-import { HoverHelp } from "components";
-import React, { FC, useState } from "react";
+import { HoverHelp } from "components/HoverHelp";
+import React, { FC, ReactElement, useState } from "react";
 import { DateRangeFilter } from "./DateRangeMenuItem";
-import { DataTableSelectAction } from "./RestDataTable";
 
+export interface DataTableSelectAction {
+  label: string;
+  action: (itemIds: string[]) => void | Promise<unknown>;
+  icon?: ReactElement;
+}
 export interface ToolbarProps {
   showQuickFilter: boolean;
   searchHeaderNames: string[];
