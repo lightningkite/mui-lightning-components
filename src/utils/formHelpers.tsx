@@ -1,10 +1,10 @@
-import {CheckboxProps, TextField, TextFieldProps} from "@mui/material"
-import {DateTimePickerProps} from "@mui/x-date-pickers"
+import { CheckboxProps, TextField, TextFieldProps } from "@mui/material";
+import { DateTimePickerProps } from "@mui/x-date-pickers";
 // import {RichTextEditorProps} from "components/Activity/ActivityEditor"
 // import {HCPSelectProps} from "components/HCPSelect"
-import {Dayjs} from "dayjs"
-import {FormikValues, useFormik} from "formik"
-import React from "react"
+import { Dayjs } from "dayjs";
+import { FormikValues, useFormik } from "formik";
+import React from "react";
 
 export function makeFormikTextFieldProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
@@ -15,8 +15,8 @@ export function makeFormikTextFieldProps<T extends FormikValues>(
     value: formik.values[field],
     onChange: formik.handleChange,
     error: formik.touched[field] && !!formik.errors[field],
-    helperText: formik.touched[field] && (formik.errors[field] as string)
-  }
+    helperText: formik.touched[field] && (formik.errors[field] as string),
+  };
 }
 
 // export function makeFormikRichTextEditorProps<T extends FormikValues>(
@@ -56,13 +56,14 @@ export function makeFormikNumericTextFieldProps<T extends FormikValues>(
     name: field.toString(),
     value: formik.values[field],
     onChange: (e) => {
-      const value = parseInt(e.target.value)
-      formik.setFieldValue(field as string, value)
+      const value = Number(e.target.value);
+      if (isNaN(value)) return;
+      formik.setFieldValue(field as string, value);
     },
     error: formik.touched[field] && !!formik.errors[field],
     helperText: formik.touched[field] && (formik.errors[field] as string),
-    type: "number"
-  }
+    type: "number",
+  };
 }
 
 export function makeFormikCheckboxProps<T extends FormikValues>(
@@ -73,9 +74,9 @@ export function makeFormikCheckboxProps<T extends FormikValues>(
     name: field.toString(),
     checked: !!formik.values[field],
     onChange: (event) => {
-      formik.setFieldValue(field as string, event.target.checked)
-    }
-  }
+      formik.setFieldValue(field as string, event.target.checked);
+    },
+  };
 }
 
 export function makeFormikAutocompleteProps<
@@ -89,8 +90,8 @@ export function makeFormikAutocompleteProps<
       formik.setFieldValue(field.toString(), value),
     error: !!formik.errors[field] && !!formik.touched[field],
     helperText:
-      formik.touched[field] && (formik.errors[field] as string | undefined)
-  }
+      formik.touched[field] && (formik.errors[field] as string | undefined),
+  };
 }
 
 // export function makeFormikHCPSelectProps<T extends FormikValues>(
@@ -106,15 +107,12 @@ export function makeFormikAutocompleteProps<
 //   }
 // }
 
-
 export function makeFormikDateTimePickerProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
   field: keyof T
 ): Pick<
   DateTimePickerProps<Date | null, unknown>,
-  "value" 
-	| "onChange" 
-	| "renderInput"
+  "value" | "onChange" | "renderInput"
 > {
   return {
     value: formik.values[field] as unknown as Date | null,
@@ -122,7 +120,7 @@ export function makeFormikDateTimePickerProps<T extends FormikValues>(
       formik.setFieldValue(
         field.toString(),
         (value as Dayjs | null)?.toDate() ?? null
-      )
+      );
     },
     renderInput: (params) => (
       <TextField
@@ -133,18 +131,18 @@ export function makeFormikDateTimePickerProps<T extends FormikValues>(
         error={formik.touched[field] && !!formik.errors[field]}
         fullWidth
       />
-    )
-  }
+    ),
+  };
 }
 
 export function dateOrNull(
   date: Date | null | undefined | string
 ): Date | null {
-  return date && !isNaN(new Date(date).valueOf()) ? new Date(date) : null
+  return date && !isNaN(new Date(date).valueOf()) ? new Date(date) : null;
 }
 
 export function dateStringOrNull(
   date: Date | null | undefined | string
 ): string | null {
-  return dateOrNull(date)?.toISOString().split("T")[0] ?? null
+  return dateOrNull(date)?.toISOString().split("T")[0] ?? null;
 }
