@@ -28,8 +28,10 @@ export interface RestAutocompleteInputProps<
   getOptionLabel: (option: T) => string;
   /** Given an item, return true if it should be disabled */
   getOptionDisabled?: (option: T) => boolean;
-  /** Which string item properties should be searched */
+  /** Non-nullable properties to search */
   searchProperties: (keyof T)[];
+  /** Nullable properties to search */
+  nullableSearchProperties?: (keyof T)[];
   /** Field label */
   label?: string;
   /** The currently selected item(s) */
@@ -65,6 +67,7 @@ export function RestAutocompleteInput<
     getOptionDisabled,
     label,
     searchProperties,
+    nullableSearchProperties,
     value,
     onChange,
     error,
@@ -89,7 +92,11 @@ export function RestAutocompleteInput<
 
     if (multiple ?? (value && inputText !== getOptionLabel(value as T))) {
       conditions.push(
-        ...makeSearchConditions(throttledInputText.split(" "), searchProperties)
+        ...makeSearchConditions(
+          throttledInputText.split(" "),
+          searchProperties,
+          nullableSearchProperties
+        )
       );
     }
 

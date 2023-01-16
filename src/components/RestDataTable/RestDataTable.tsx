@@ -33,6 +33,7 @@ export interface RestDataTableProps<T extends HasId> {
   additionalQueryConditions?: Condition<T>[];
   dependencies?: unknown[];
   searchFields?: (keyof T)[];
+  nullableSearchFields?: (keyof T)[];
   defaultSorting?: GridSortModel;
   multiselectActions?: DataTableSelectAction[];
   loading?: boolean;
@@ -48,6 +49,7 @@ export function RestDataTable<T extends HasId>(
     columns,
     dependencies,
     searchFields,
+    nullableSearchFields,
     defaultSorting = [],
     multiselectActions,
     loading: externalLoading,
@@ -69,13 +71,19 @@ export function RestDataTable<T extends HasId>(
   const customToolbarProps: ToolbarProps = {
     selectActions: multiselectActions,
     selectionModel,
-    showQuickFilter: !!searchFields?.length,
+    showQuickFilter: !!searchFields?.length || !!nullableSearchFields?.length,
     dateRangeFilter,
     setDateRangeFilter,
     searchHeaderNames: (() => {
-      const searchFieldstrings = searchFields?.map((c) => c.toString()) || [];
+      const searchFieldStrings = searchFields?.map((c) => c.toString()) || [];
+      const nullableSearchFieldString =
+        nullableSearchFields?.map((c) => c.toString()) || [];
       return columns
-        .filter((c) => searchFieldstrings.includes(c.field))
+        .filter(
+          (c) =>
+            searchFieldStrings.includes(c.field) ||
+            nullableSearchFieldString.includes(c.field)
+        )
         .map((c) => c.headerName?.toLowerCase())
         .filter((name) => name !== undefined) as string[];
     })(),
@@ -92,7 +100,11 @@ export function RestDataTable<T extends HasId>(
   useEffect(() => {
     const conditions = [
       ...(additionalQueryConditions || []),
-      ...makeSearchConditions(filterModel.quickFilterValues, searchFields),
+      ...makeSearchConditions(
+        filterModel.quickFilterValues,
+        searchFields,
+        nullableSearchFields
+      ),
     ];
 
     if (dateRangeFilter) {

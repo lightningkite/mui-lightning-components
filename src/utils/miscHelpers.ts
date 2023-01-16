@@ -2,27 +2,29 @@ import { Condition } from "@lightningkite/lightning-server-simplified";
 
 /**
  * Returns a lightning server condition that will match any items
- * where any of the search terms occur in any of the fields
+ * where any of the search terms occur in any of an objects properties
  *
  * @param searchTerms an array of search terms
- * @param searchFields the fields to include in the search
+ * @param searchProperties non-nullable properties to search
+ * @param nullableSearchProperties nullable properties to search
  * @returns a lightning server condition
  */
 export function makeSearchConditions<T>(
   searchTerms: string[] | undefined,
-  searchFields: (keyof T)[] | undefined
+  searchProperties: (keyof T)[] | undefined,
+  nullableSearchProperties?: (keyof T)[] | undefined
 ): Condition<T>[] {
   const conditions: Condition<T>[] = [];
 
   searchTerms = searchTerms?.filter((term) => term !== "");
 
-  if (searchTerms?.length && searchFields?.length) {
+  if (searchTerms?.length && searchProperties?.length) {
     const rowConditions: Condition<T>[] = [];
 
     searchTerms?.forEach((term) => {
       const filterValueConditions: Condition<T>[] = [];
 
-      searchFields.forEach((columnName) => {
+      searchProperties.forEach((columnName) => {
         filterValueConditions.push({
           [columnName]: {
             StringContains: {
@@ -32,6 +34,19 @@ export function makeSearchConditions<T>(
           },
         } as unknown as Condition<T>);
       });
+
+      nullableSearchProperties?.forEach((columnName) => {
+        filterValueConditions.push({
+          [columnName as keyof T]: {
+            IfNotNull: {
+              StringContains: {
+                value: term,
+                ignoreCase: true
+              }
+            }
+          }
+        } as unknown as Condition<T>)
+      })
 
       rowConditions.push({ Or: filterValueConditions });
     });
