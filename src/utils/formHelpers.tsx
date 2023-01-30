@@ -56,9 +56,10 @@ export function makeFormikNumericTextFieldProps<T extends FormikValues>(
     name: field.toString(),
     value: formik.values[field],
     onChange: (e) => {
-      const value = Number(e.target.value);
-      if (isNaN(value)) return;
-      formik.setFieldValue(field as string, value);
+      const value = e.target.value;
+      if (isNaN(+value)) return;
+      const formattedValue = value === "" ? "" : Number(value).toString();
+      formik.setFieldValue(field as string, formattedValue);
     },
     error: formik.touched[field] && !!formik.errors[field],
     helperText: formik.touched[field] && (formik.errors[field] as string),
