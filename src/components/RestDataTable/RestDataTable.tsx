@@ -146,19 +146,12 @@ export function RestDataTable<T extends HasId>(
     setQueryCondition(
       conditions.length ? { And: conditions } : { Always: true }
     );
-  }, [
-    additionalQueryConditions,
-    filterModel,
-    searchFields,
-    dateRangeFilter,
-    dependencies,
-    columns,
-  ]);
+  }, [filterModel, dateRangeFilter, dependencies]);
 
   useEffect(() => {
     setPage(0);
     queryCondition && restEndpoint.count(queryCondition).then(setTotalItems);
-  }, [restEndpoint, queryCondition]);
+  }, [queryCondition, sortModel, pageSize]);
 
   useEffect(() => {
     if (!queryCondition) return;
@@ -176,12 +169,12 @@ export function RestDataTable<T extends HasId>(
         condition: queryCondition,
         skip: page * pageSize,
         limit: pageSize,
-        orderBy: orderBy?.length ? orderBy : undefined,
+        orderBy: [...(orderBy ?? []), "-_id"] as Query<T>["orderBy"],
       })
       .then(setItems)
       .catch(() => setItems(null))
       .finally(() => setLoading(false));
-  }, [restEndpoint, page, pageSize, queryCondition, sortModel]);
+  }, [page, pageSize, queryCondition, sortModel]);
 
   const processedColumns = (() => {
     const temp: GridColumns<T> = columns.map((c) => ({
