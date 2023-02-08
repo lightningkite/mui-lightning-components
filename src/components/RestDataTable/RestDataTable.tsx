@@ -9,7 +9,7 @@ import { Alert, Box, Paper } from "@mui/material";
 import {
   DataGrid,
   GridActionsCellItem,
-  GridColDef,
+  GridEnrichedColDef,
   GridColumns,
   GridFilterModel,
   GridSelectionModel,
@@ -28,7 +28,7 @@ import { makeSearchConditions } from "utils/miscHelpers";
 // For details on configuring the columns prop, see https://v4.mui.com/components/data-grid/columns/#headers
 export interface RestDataTableProps<T extends HasId> {
   restEndpoint: SessionRestEndpoint<T>;
-  columns: GridColDef<T>[];
+  columns: GridEnrichedColDef<T>[];
   onRowClick?: (item: T) => void;
   additionalQueryConditions?: Condition<T>[];
   dependencies?: unknown[];

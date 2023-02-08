@@ -11,7 +11,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { GridColDef } from "@mui/x-data-grid";
+import { GridEnrichedColDef } from "@mui/x-data-grid";
 import { DatePicker } from "@mui/x-date-pickers";
 import React, { FC, useEffect, useState } from "react";
 
@@ -24,7 +24,7 @@ export interface DateRangeFilter {
 export interface DateRangeMenuItemProps {
   initialDateRangeFilter: DateRangeFilter;
   saveDateRangeFilter: (dateRange: DateRangeFilter) => void;
-  column: GridColDef;
+  column: GridEnrichedColDef;
 }
 
 const DateRangeMenuItem: FC<DateRangeMenuItemProps> = (props) => {
