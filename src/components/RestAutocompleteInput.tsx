@@ -90,7 +90,7 @@ export function RestAutocompleteInput<
     setFetching(true);
     const conditions = [...(additionalQueryConditions ?? [])];
 
-    if (multiple ?? (value && inputText !== getOptionLabel(value as T))) {
+    if (multiple || !value || inputText !== getOptionLabel(value as T)) {
       conditions.push(
         ...makeSearchConditions(
           throttledInputText.split(" "),
