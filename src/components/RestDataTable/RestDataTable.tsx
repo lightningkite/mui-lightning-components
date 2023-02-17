@@ -27,7 +27,7 @@ import { makeSearchConditions } from "utils/miscHelpers";
 
 // For details on configuring the columns prop, see https://v4.mui.com/components/data-grid/columns/#headers
 export interface RestDataTableProps<T extends HasId> {
-  restEndpoint: SessionRestEndpoint<T>;
+  restEndpoint: Pick<SessionRestEndpoint<T>, "query" | "count">;
   columns: GridEnrichedColDef<T>[];
   onRowClick?: (item: T) => void;
   additionalQueryConditions?: Condition<T>[];
