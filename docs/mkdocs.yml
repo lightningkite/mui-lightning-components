@@ -8,9 +8,9 @@ nav:
           - Rest Data Table: guide/rest-data-table.md
           - Rest Autocomplete: guide/rest-autocomplete.md
           - Hover Help: guide/hover-help.md
-      - Functions:
-          - Formik Helpers: guide/formik-helpers.md
-          - Make Search Conditions: guide/make-search-conditions.md
+      - Helper Functions:
+          - Formik Input Helpers: guide/formik-helpers.md
+          - makeSearchConditions: guide/make-search-conditions.md
       - Hooks:
           - useThrottle: guide/use-throttle.md
   - Contributing:
