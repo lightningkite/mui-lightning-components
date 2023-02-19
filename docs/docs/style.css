@@ -7,6 +7,10 @@ h2 {
   margin-top: 3rem !important;
 }
 
+h3 {
+  font-weight: 600 !important;
+}
+
 .md-nav__link {
   background: unset !important;
   box-shadow: unset !important;
@@ -21,4 +25,8 @@ h2 {
 
 .md-nav__list {
   font-size: 0.8rem;
+}
+
+.md-nav__item label {
+  color: black !important;
 }

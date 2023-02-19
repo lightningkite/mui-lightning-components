@@ -26,3 +26,5 @@ theme:
     - navigation.tabs.sticky
 extra_css:
   - style.css
+extra:
+  generator: false
