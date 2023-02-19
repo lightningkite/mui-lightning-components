@@ -1,0 +1,19 @@
+site_name: MUI Lightning Components
+repo_url: https://github.com/lightningkite/mui-lightning-components
+nav:
+  - Home: home.md
+  - Guide:
+      - Getting Started: guide/getting-started.md
+  - Contributing:
+      - Library: contributing/contributing-library.md
+      - Docs: contributing/contributing-docs.md
+theme:
+  name: material
+  palette:
+    primary: blue
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+extra_css:
+  - style.css
