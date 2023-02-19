@@ -1,7 +1,7 @@
 site_name: MUI Lightning Components
 repo_url: https://github.com/lightningkite/mui-lightning-components
 nav:
-  - Home: home.md
+  - Home: index.md
   - Guide:
       - Getting Started: guide/getting-started.md
   - Contributing:

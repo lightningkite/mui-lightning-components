@@ -30,7 +30,11 @@ To add a new page, create a new markdown file in the `docs` directory, then add 
 
 ## Publishing
 
-> TODO: Add instructions for publishing to GitHub Pages
+To deploy changes to the docs:
+
+```bash
+mkdocs gh-deploy
+```
 
 ## Additional Documentation
 
