@@ -1,7 +1,7 @@
 import { ArrowDropDown } from "@mui/icons-material";
 import { Chip, Menu, MenuItem, Typography } from "@mui/material";
 import React, { ReactElement, useState } from "react";
-import { ActiveFilter } from "./FilterBar";
+import { FilterChipProps } from "./FilterChip";
 import { MultiSelectFilterOption } from "./filterTypes";
 
 const formatter = new Intl.ListFormat("en", {
@@ -9,22 +9,12 @@ const formatter = new Intl.ListFormat("en", {
   type: "disjunction",
 });
 
-export interface FilterChipMultiSelectProps<T> {
-  activeFilter: ActiveFilter<T, MultiSelectFilterOption<T>>;
-  setActiveFilter: (
-    activeFilter: ActiveFilter<T, MultiSelectFilterOption<T>>
-  ) => void;
-  handleDelete: (
-    chipToDelete: ActiveFilter<T, MultiSelectFilterOption<T>>
-  ) => () => void;
-}
-
 export function FilterChipMultiSelect<T>(
-  props: FilterChipMultiSelectProps<T>
+  props: FilterChipProps<T, MultiSelectFilterOption<T>>
 ): ReactElement {
   const { activeFilter, setActiveFilter, handleDelete } = props;
-  const { value, filterItem } = activeFilter;
-  const { optionToLabel, optionToID, options, placeholder } = filterItem;
+  const { value, filterOption } = activeFilter;
+  const { optionToLabel, optionToID, options, placeholder } = filterOption;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);

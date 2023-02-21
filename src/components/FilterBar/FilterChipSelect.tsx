@@ -1,25 +1,15 @@
 import { ArrowDropDown } from "@mui/icons-material";
 import { Chip, Menu, MenuItem, Typography } from "@mui/material";
 import React, { ReactElement, useState } from "react";
-import { ActiveFilter } from "./FilterBar";
+import { FilterChipProps } from "./FilterChip";
 import { SelectFilterOption } from "./filterTypes";
 
-export interface FilterChipSelectProps<T> {
-  activeFilter: ActiveFilter<T, SelectFilterOption<T>>;
-  setActiveFilter: (
-    activeFilter: ActiveFilter<T, SelectFilterOption<T>>
-  ) => void;
-  handleDelete: (
-    chipToDelete: ActiveFilter<T, SelectFilterOption<T>>
-  ) => () => void;
-}
-
 export function FilterChipSelect<T>(
-  props: FilterChipSelectProps<T>
+  props: FilterChipProps<T, SelectFilterOption<T>>
 ): ReactElement {
   const { activeFilter, setActiveFilter, handleDelete } = props;
-  const { value, filterItem } = activeFilter;
-  const { optionToLabel, optionToID, options, placeholder } = filterItem;
+  const { value, filterOption } = activeFilter;
+  const { optionToLabel, optionToID, options, placeholder } = filterOption;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);

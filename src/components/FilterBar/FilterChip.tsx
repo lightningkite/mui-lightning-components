@@ -1,31 +1,46 @@
 import React, { ReactElement } from "react";
 import { ActiveFilter } from "./FilterBar";
+import { FilterChipMultiSelect } from "./FilterChipMultiSelect";
+import { FilterChipSelect } from "./FilterChipSelect";
+import { FilterChipUnit } from "./FilterChipUnit";
 import {
-  FilterChipMultiSelect,
-  FilterChipMultiSelectProps,
-} from "./FilterChipMultiSelect";
-import { FilterChipSelect, FilterChipSelectProps } from "./FilterChipSelect";
-import { FilterChipUnit, FilterChipUnitProps } from "./FilterChipUnit";
-import { FilterOption, FilterType } from "./filterTypes";
+  FilterOption,
+  FilterType,
+  MultiSelectFilterOption,
+  SelectFilterOption,
+  UnitFilterOption,
+} from "./filterTypes";
 
-export interface FilterChipProps<T> {
-  activeFilter: ActiveFilter<T, FilterOption<T>>;
-  setActiveFilter: (activeFilter: ActiveFilter<T, FilterOption<T>>) => void;
-  handleDelete: (chipToDelete: ActiveFilter<T, FilterOption<T>>) => () => void;
+export interface FilterChipProps<T, FILTER_OPTION extends FilterOption<T>> {
+  activeFilter: ActiveFilter<T, FILTER_OPTION>;
+  setActiveFilter: (activeFilter: ActiveFilter<T, FILTER_OPTION>) => void;
+  handleDelete: (chipToDelete: ActiveFilter<T, FILTER_OPTION>) => () => void;
+  activeColor: "primary" | "secondary";
 }
 
-export function FilterChip<T>(props: FilterChipProps<T>): ReactElement {
+export function FilterChip<T, FILTER_OPTION extends FilterOption<T>>(
+  props: FilterChipProps<T, FILTER_OPTION>
+): ReactElement {
   const filterTypeMap: Record<FilterType, ReactElement> = {
     [FilterType.SELECT]: (
-      <FilterChipSelect {...(props as FilterChipSelectProps<T>)} />
+      <FilterChipSelect
+        {...(props as unknown as FilterChipProps<T, SelectFilterOption<T>>)}
+      />
     ),
     [FilterType.MULTI_SELECT]: (
-      <FilterChipMultiSelect {...(props as FilterChipMultiSelectProps<T>)} />
+      <FilterChipMultiSelect
+        {...(props as unknown as FilterChipProps<
+          T,
+          MultiSelectFilterOption<T>
+        >)}
+      />
     ),
     [FilterType.UNIT]: (
-      <FilterChipUnit {...(props as FilterChipUnitProps<T>)} />
+      <FilterChipUnit
+        {...(props as unknown as FilterChipProps<T, UnitFilterOption>)}
+      />
     ),
   };
 
-  return filterTypeMap[props.activeFilter.filterItem.type];
+  return filterTypeMap[props.activeFilter.filterOption.type];
 }

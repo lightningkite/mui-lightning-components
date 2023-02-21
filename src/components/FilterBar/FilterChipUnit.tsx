@@ -1,22 +1,18 @@
 import { Chip, Typography } from "@mui/material";
 import React, { ReactElement } from "react";
-import { ActiveFilter } from "./FilterBar";
+import { FilterChipProps } from "./FilterChip";
 import { UnitFilterOption } from "./filterTypes";
 
-export interface FilterChipUnitProps<T> {
-  activeFilter: ActiveFilter<T, UnitFilterOption>;
-  setActiveFilter: (activeFilter: ActiveFilter<T, UnitFilterOption>) => void;
-  handleDelete: (chipToDelete: ActiveFilter<T, UnitFilterOption>) => () => void;
-}
-
-export function FilterChipUnit<T>(props: FilterChipUnitProps<T>): ReactElement {
-  const { activeFilter, handleDelete } = props;
-  const { filterItem } = activeFilter;
-  const { name } = filterItem;
+export function FilterChipUnit<T>(
+  props: FilterChipProps<T, UnitFilterOption>
+): ReactElement {
+  const { activeFilter, handleDelete, activeColor } = props;
+  const { filterOption } = activeFilter;
+  const { name } = filterOption;
 
   return (
     <Chip
-      color="secondary"
+      color={activeColor}
       label={<Typography variant="body2">{name}</Typography>}
       onDelete={handleDelete(activeFilter)}
       size="small"

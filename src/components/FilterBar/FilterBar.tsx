@@ -11,32 +11,22 @@ import {
 import { HoverHelp } from "components/HoverHelp";
 import React, { ReactElement, useEffect, useState } from "react";
 import { FilterChip } from "./FilterChip";
-import { FilterOption, FilterType } from "./filterTypes";
+import { FilterOption, FilterType, FilterTypeValue } from "./filterTypes";
 
 export interface FilterBarProps {
   sx?: SxProps;
   filterOptions: FilterOption<any>[];
   onActiveFiltersChange: (activeFilters: ActiveFilter<any, any>[]) => void;
+  activeChipColor?: "primary" | "secondary";
 }
-
-export type FilterTypeValue<
-  T,
-  FILTER_TYPE extends FilterType
-> = FILTER_TYPE extends FilterType.SELECT
-  ? T | null
-  : FILTER_TYPE extends FilterType.MULTI_SELECT
-  ? T[]
-  : FILTER_TYPE extends FilterType.UNIT
-  ? true
-  : never;
 
 export interface ActiveFilter<T, FILTER_OPTION extends FilterOption<T>> {
   id: string;
-  filterItem: FILTER_OPTION;
+  filterOption: FILTER_OPTION;
   value: FilterTypeValue<T, FILTER_OPTION["type"]>;
 }
 
-const filterOptionDefaultValues: {
+const filterOptionInitialValues: {
   [F in FilterType]: FilterTypeValue<any, F>;
 } = {
   [FilterType.SELECT]: null,
@@ -45,10 +35,23 @@ const filterOptionDefaultValues: {
 };
 
 export function FilterBar(props: FilterBarProps): ReactElement {
-  const { sx, filterOptions, onActiveFiltersChange } = props;
+  const {
+    sx,
+    filterOptions,
+    onActiveFiltersChange,
+    activeChipColor = "primary",
+  } = props;
 
   const [activeFilters, setActiveFilters] = useState<ActiveFilter<any, any>[]>(
-    []
+    filterOptions
+      .filter((f) => f.includeByDefault === true)
+      .map((filterOption) => ({
+        id: crypto.randomUUID(),
+        value:
+          filterOption.defaultValue ??
+          filterOptionInitialValues[filterOption.type],
+        filterOption,
+      }))
   );
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -92,11 +95,12 @@ export function FilterBar(props: FilterBarProps): ReactElement {
         </Typography>
       )}
       {activeFilters.map((af) => (
-        <FilterChip<any>
+        <FilterChip<any, any>
           key={af.id}
           activeFilter={af}
           setActiveFilter={updateFilter}
           handleDelete={handleDelete}
+          activeColor={activeChipColor}
         />
       ))}
 
@@ -127,15 +131,17 @@ export function FilterBar(props: FilterBarProps): ReactElement {
             <MenuItem
               key={filterOption.name}
               disabled={activeFilters.some(
-                (af) => af.filterItem.name === filterOption.name
+                (af) => af.filterOption.name === filterOption.name
               )}
               onClick={() => {
                 setActiveFilters([
                   ...activeFilters,
                   {
                     id: crypto.randomUUID(),
-                    value: filterOptionDefaultValues[filterOption.type],
-                    filterItem: filterOption,
+                    value:
+                      filterOption.defaultValue ??
+                      filterOptionInitialValues[filterOption.type],
+                    filterOption,
                   },
                 ]);
                 handleClose();
