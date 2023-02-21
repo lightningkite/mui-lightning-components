@@ -19,7 +19,7 @@ export interface RestAutocompleteInputProps<
   Multiple extends boolean | undefined
 > {
   /** The model rest endpoint to fetch options from */
-  restEndpoint: Pick<SessionRestEndpoint<T>, "query">;
+  restEndpoint: SessionRestEndpoint<T>;
   /** True to allow the user to select multiple options */
   multiple?: Multiple;
   /** Additional conditions to filter the values when requested from the endpoint */

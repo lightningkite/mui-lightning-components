@@ -14,8 +14,8 @@ nav:
       - Hooks:
           - useThrottle: guide/use-throttle.md
   - Contributing:
-      - Library: contributing/contributing-library.md
       - Docs: contributing/contributing-docs.md
+      - Library: contributing/contributing-library.md
 theme:
   name: material
   palette:
