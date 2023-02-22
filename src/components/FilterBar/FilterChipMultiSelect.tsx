@@ -12,7 +12,7 @@ const formatter = new Intl.ListFormat("en", {
 export function FilterChipMultiSelect<T>(
   props: FilterChipProps<T, MultiSelectFilterOption<T>>
 ): ReactElement {
-  const { activeFilter, setActiveFilter, handleDelete } = props;
+  const { activeFilter, setActiveFilter, handleDelete, activeColor } = props;
   const { value, filterOption } = activeFilter;
   const { optionToLabel, optionToID, options, placeholder } = filterOption;
 
@@ -43,7 +43,7 @@ export function FilterChipMultiSelect<T>(
   return (
     <>
       <Chip
-        color={value.length ? "secondary" : "default"}
+        color={value.length ? activeColor : "default"}
         icon={<ArrowDropDown />}
         label={
           <Typography

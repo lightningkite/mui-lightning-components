@@ -7,7 +7,7 @@ import { SelectFilterOption } from "./filterTypes";
 export function FilterChipSelect<T>(
   props: FilterChipProps<T, SelectFilterOption<T>>
 ): ReactElement {
-  const { activeFilter, setActiveFilter, handleDelete } = props;
+  const { activeFilter, setActiveFilter, handleDelete, activeColor } = props;
   const { value, filterOption } = activeFilter;
   const { optionToLabel, optionToID, options, placeholder } = filterOption;
 
@@ -24,7 +24,7 @@ export function FilterChipSelect<T>(
   return (
     <>
       <Chip
-        color={value ? "secondary" : "default"}
+        color={value ? activeColor : "default"}
         icon={<ArrowDropDown />}
         label={
           <Typography variant="body2" fontStyle={value ? undefined : "italic"}>
