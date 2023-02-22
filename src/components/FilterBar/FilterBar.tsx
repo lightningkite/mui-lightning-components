@@ -29,9 +29,9 @@ export interface ActiveFilter<T, FILTER_OPTION extends FilterOption<T>> {
 const filterOptionInitialValues: {
   [F in FilterType]: FilterTypeValue<any, F>;
 } = {
-  [FilterType.SELECT]: null,
-  [FilterType.MULTI_SELECT]: [],
-  [FilterType.UNIT]: true,
+  select: null,
+  multiSelect: [],
+  unit: true,
 };
 
 export function FilterBar(props: FilterBarProps): ReactElement {

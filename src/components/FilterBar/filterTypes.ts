@@ -1,17 +1,13 @@
-export enum FilterType {
-  SELECT = "select",
-  MULTI_SELECT = "multiSelect",
-  UNIT = "unit",
-}
+export type FilterType = "select" | "multiSelect" | "unit";
 
 export type FilterTypeValue<
   T,
   FILTER_TYPE extends FilterType
-> = FILTER_TYPE extends FilterType.SELECT
+> = FILTER_TYPE extends "select"
   ? T | null
-  : FILTER_TYPE extends FilterType.MULTI_SELECT
+  : FILTER_TYPE extends "multiSelect"
   ? T[]
-  : FILTER_TYPE extends FilterType.UNIT
+  : FILTER_TYPE extends "unit"
   ? true
   : never;
 
@@ -24,7 +20,7 @@ export interface BaseFilterOption<T, FILTER_OPTION extends FilterOption<T>> {
 
 export interface SelectFilterOption<T>
   extends BaseFilterOption<T, SelectFilterOption<T>> {
-  type: FilterType.SELECT;
+  type: "select";
   placeholder: string;
   options: T[];
   optionToID: (option: T) => string;
@@ -33,7 +29,7 @@ export interface SelectFilterOption<T>
 
 export interface MultiSelectFilterOption<T>
   extends BaseFilterOption<T, MultiSelectFilterOption<T>> {
-  type: FilterType.MULTI_SELECT;
+  type: "multiSelect";
   placeholder: string;
   options: T[];
   optionToID: (option: T) => string;
@@ -42,7 +38,7 @@ export interface MultiSelectFilterOption<T>
 
 export interface UnitFilterOption
   extends BaseFilterOption<never, UnitFilterOption> {
-  type: FilterType.UNIT;
+  type: "unit";
 }
 
 export type FilterOption<T> =

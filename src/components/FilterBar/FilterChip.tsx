@@ -22,12 +22,12 @@ export function FilterChip<T, FILTER_OPTION extends FilterOption<T>>(
   props: FilterChipProps<T, FILTER_OPTION>
 ): ReactElement {
   const filterTypeMap: Record<FilterType, ReactElement> = {
-    [FilterType.SELECT]: (
+    select: (
       <FilterChipSelect
         {...(props as unknown as FilterChipProps<T, SelectFilterOption<T>>)}
       />
     ),
-    [FilterType.MULTI_SELECT]: (
+    multiSelect: (
       <FilterChipMultiSelect
         {...(props as unknown as FilterChipProps<
           T,
@@ -35,7 +35,7 @@ export function FilterChip<T, FILTER_OPTION extends FilterOption<T>>(
         >)}
       />
     ),
-    [FilterType.UNIT]: (
+    unit: (
       <FilterChipUnit
         {...(props as unknown as FilterChipProps<T, UnitFilterOption>)}
       />
