@@ -16,7 +16,9 @@ import { FilterOption, FilterType, FilterTypeValue } from "./filterTypes";
 export interface FilterBarProps {
   sx?: SxProps;
   filterOptions: FilterOption<any>[];
-  onActiveFiltersChange: (activeFilters: ActiveFilter<any, any>[]) => void;
+  onActiveFiltersChange: (
+    activeFilters: ActiveFilter<any, FilterOption<any>>[]
+  ) => void;
   activeChipColor?: "primary" | "secondary";
 }
 
@@ -42,7 +44,9 @@ export function FilterBar(props: FilterBarProps): ReactElement {
     activeChipColor = "primary",
   } = props;
 
-  const [activeFilters, setActiveFilters] = useState<ActiveFilter<any, any>[]>(
+  const [activeFilters, setActiveFilters] = useState<
+    ActiveFilter<any, FilterOption<any>>[]
+  >(
     filterOptions
       .filter((f) => f.includeByDefault === true)
       .map((filterOption) => ({
@@ -63,11 +67,12 @@ export function FilterBar(props: FilterBarProps): ReactElement {
     setAnchorEl(null);
   };
 
-  const handleDelete = (chipToDelete: ActiveFilter<any, any>) => () => {
-    setActiveFilters(activeFilters.filter((af) => af.id !== chipToDelete.id));
-  };
+  const handleDelete =
+    (chipToDelete: ActiveFilter<any, FilterOption<any>>) => () => {
+      setActiveFilters(activeFilters.filter((af) => af.id !== chipToDelete.id));
+    };
 
-  const updateFilter = (newFilter: ActiveFilter<any, any>) => {
+  const updateFilter = (newFilter: ActiveFilter<any, FilterOption<any>>) => {
     setActiveFilters(
       activeFilters.map((af) => (af.id === newFilter.id ? newFilter : af))
     );
@@ -95,7 +100,7 @@ export function FilterBar(props: FilterBarProps): ReactElement {
         </Typography>
       )}
       {activeFilters.map((af) => (
-        <FilterChip<any, any>
+        <FilterChip<any, FilterOption<any>>
           key={af.id}
           activeFilter={af}
           setActiveFilter={updateFilter}
