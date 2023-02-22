@@ -4,9 +4,9 @@ import React, { ReactElement, useState } from "react";
 import { FilterChipProps } from "./FilterChip";
 import { MultiSelectFilterOption } from "./filterTypes";
 
-const formatter = new Intl.ListFormat("en", {
+const conjunctionFormatter = new Intl.ListFormat("en-US", {
   style: "short",
-  type: "disjunction",
+  type: "conjunction",
 });
 
 export function FilterChipMultiSelect<T>(
@@ -40,6 +40,8 @@ export function FilterChipMultiSelect<T>(
     });
   };
 
+  const labels = value.map(optionToLabel);
+
   return (
     <>
       <Chip
@@ -50,8 +52,12 @@ export function FilterChipMultiSelect<T>(
             variant="body2"
             fontStyle={value.length ? undefined : "italic"}
           >
-            {value.length
-              ? formatter.format(value.map(optionToLabel))
+            {labels.length
+              ? conjunctionFormatter.format(
+                  labels.length <= 3
+                    ? labels
+                    : [labels[0], labels[1], `${labels.length - 2} more`]
+                )
               : placeholder}
           </Typography>
         }
