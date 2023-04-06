@@ -175,7 +175,8 @@ export function RestDataTable<T extends HasId>(
       </Alert>
     );
 
-  const rowItems = rows.status === "loading" ? [] : rows.items;
+  const rowItems =
+    rows.status === "loading" ? rows.previousItems ?? [] : rows.items;
   const totalItems = rows.status === "loading" ? undefined : rows.totalItems;
 
   return (
@@ -269,7 +270,7 @@ export function RestDataTable<T extends HasId>(
 
 type State<T> = {
   rows:
-    | { status: "loading" }
+    | { status: "loading"; previousItems?: T[] }
     | { status: "error" }
     | { status: "success"; items: T[]; totalItems: number };
   dateRangeFilter: DateRangeFilter | undefined;
@@ -329,9 +330,12 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
         page: 0,
       };
     case "setPage":
+      const previousItems =
+        state.rows.status === "success" ? state.rows.items : [];
+
       return {
         ...state,
-        rows: { status: "loading" },
+        rows: { status: "loading", previousItems },
         page: action.page,
       };
     case "setSelectionModel":
