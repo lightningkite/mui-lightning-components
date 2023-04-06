@@ -1,5 +1,4 @@
 import {
-  condition,
   Condition,
   HasId,
   Query,
@@ -16,7 +15,7 @@ import {
   GridSortModel,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import React, { ReactElement, useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useMemo, useReducer } from "react";
 import ColumnMenu, { ColumnMenuProps } from "./ColumnMenu";
 import { DateRangeFilter } from "./DateRangeMenuItem";
 import RestDataTableToolbar, {
@@ -55,25 +54,33 @@ export function RestDataTable<T extends HasId>(
     loading: externalLoading,
   } = props;
 
-  const [items, setItems] = useState<T[] | null>();
-  const [totalItems, setTotalItems] = useState<number>();
-  const [loading, setLoading] = useState(false);
-  const [pageSize, setPageSize] = useState(10);
-  const [page, setPage] = useState(0);
-  const [sortModel, setSortModel] = useState<GridSortModel>(defaultSorting);
-  const [filterModel, setFilterModel] = useState<GridFilterModel>({
-    items: [],
+  const [state, dispatch] = useReducer(reducer<T>, {
+    rows: { status: "loading" },
+    dateRangeFilter: undefined,
+    gridFilterModel: { items: [] },
+    pageSize: 10,
+    page: 0,
+    selectionModel: [],
+    sortModel: defaultSorting,
   });
-  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>();
-  const [queryCondition, setQueryCondition] = useState<Condition<T>>();
-  const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
+
+  const {
+    rows,
+    dateRangeFilter,
+    gridFilterModel,
+    pageSize,
+    page,
+    selectionModel,
+    sortModel,
+  } = state;
 
   const customToolbarProps: ToolbarProps = {
     selectActions: multiselectActions,
     selectionModel,
     showQuickFilter: !!searchFields?.length || !!nullableSearchFields?.length,
     dateRangeFilter,
-    setDateRangeFilter,
+    setDateRangeFilter: (newFilter) =>
+      dispatch({ type: "setDateRangeFilter", dateRangeFilter: newFilter }),
     searchHeaderNames: (() => {
       const searchFieldStrings = searchFields?.map((c) => c.toString()) || [];
       const nullableSearchFieldString =
@@ -94,68 +101,19 @@ export function RestDataTable<T extends HasId>(
     "dateRangeFilter" | "setDateRangeFilter"
   > = {
     dateRangeFilter,
-    setDateRangeFilter,
+    setDateRangeFilter: (newFilter) =>
+      dispatch({ type: "setDateRangeFilter", dateRangeFilter: newFilter }),
   };
 
-  useEffect(() => {
-    const conditions = [
-      ...(additionalQueryConditions || []),
-      ...makeSearchConditions(
-        filterModel.quickFilterValues,
-        searchFields,
-        nullableSearchFields
-      ),
-    ];
+  const queryCondition: Condition<T> = useMemo(() => {
+    const conditions = makeQueryConditions(state, props);
+    return conditions.length === 0 ? { And: conditions } : { Always: true };
+  }, [dateRangeFilter, gridFilterModel]);
 
-    if (dateRangeFilter) {
-      const usesTime =
-        columns.find((c) => c.field === dateRangeFilter.field)?.type ===
-        "dateTime";
-
-      const startDate = dateRangeFilter.start;
-      let endDate = dateRangeFilter.end;
-
-      // if (usesTime && endDate) {
-      endDate = dayjs(endDate).add(1, "day").toDate();
-      // }
-
-      const startTimeString = startDate?.toISOString();
-      const endTimeString = endDate?.toISOString();
-
-      if (startTimeString) {
-        conditions.push({
-          [dateRangeFilter.field]: {
-            GreaterThanOrEqual: !usesTime
-              ? startTimeString.split("T")[0]
-              : startTimeString,
-          },
-        } as Condition<T>);
-      }
-
-      if (endTimeString) {
-        conditions.push({
-          [dateRangeFilter.field]: {
-            LessThanOrEqual: !usesTime
-              ? endTimeString.split("T")[0]
-              : endTimeString,
-          },
-        } as Condition<T>);
-      }
-    }
-
-    setQueryCondition(
-      conditions.length ? { And: conditions } : { Always: true }
-    );
-  }, [filterModel, dateRangeFilter, dependencies]);
+  useEffect(() => dispatch({ type: "forceReload" }), dependencies);
 
   useEffect(() => {
-    setPage(0);
-    queryCondition && restEndpoint.count(queryCondition).then(setTotalItems);
-  }, [queryCondition, sortModel, pageSize]);
-
-  useEffect(() => {
-    if (!queryCondition) return;
-    setLoading(true);
+    if (rows.status !== "loading") return;
 
     const orderBy = sortModel
       .filter((s) => !!s.sort)
@@ -164,17 +122,20 @@ export function RestDataTable<T extends HasId>(
         return s.field;
       }) as Query<T>["orderBy"];
 
-    restEndpoint
-      .query({
+    Promise.all([
+      restEndpoint.query({
         condition: queryCondition,
         skip: page * pageSize,
         limit: pageSize,
         orderBy: [...(orderBy ?? []), "-_id"] as Query<T>["orderBy"],
-      })
-      .then(setItems)
-      .catch(() => setItems(null))
-      .finally(() => setLoading(false));
-  }, [page, pageSize, queryCondition, sortModel]);
+      }),
+      restEndpoint.count(queryCondition),
+    ])
+      .then(([items, totalItems]) =>
+        dispatch({ type: "setRows", items, totalItems })
+      )
+      .catch(() => dispatch({ type: "error" }));
+  }, [rows.status]);
 
   const processedColumns = (() => {
     const temp: GridColumns<T> = columns.map((c) => ({
@@ -207,35 +168,44 @@ export function RestDataTable<T extends HasId>(
     return temp;
   })();
 
-  if (items === null)
+  if (rows.status === "error")
     return (
       <Alert severity="error" variant="filled">
         Error loading table items
       </Alert>
     );
 
+  const rowItems = rows.status === "loading" ? [] : rows.items;
+  const totalItems = rows.status === "loading" ? undefined : rows.totalItems;
+
   return (
     <div>
       <Box component={Paper}>
         <DataGrid
-          rows={items ?? []}
+          rows={rowItems}
           columns={processedColumns}
           rowHeight={60}
           pageSize={pageSize}
           rowsPerPageOptions={[5, 10, 20, 50, 100]}
-          onPageSizeChange={setPageSize}
+          onPageSizeChange={(newPageSize) =>
+            dispatch({ type: "setPageSize", pageSize: newPageSize })
+          }
           page={page}
-          onPageChange={setPage}
+          onPageChange={(newPage) =>
+            dispatch({ type: "setPage", page: newPage })
+          }
           autoHeight
           getRowId={(row) => row._id}
           onRowClick={(params) => onRowClick && onRowClick(params.row)}
-          loading={externalLoading || loading || totalItems === undefined}
+          loading={externalLoading || rows.status === "loading"}
           pagination
           paginationMode="server"
-          rowCount={totalItems ?? items?.length ?? 0}
+          rowCount={totalItems ?? 0}
           sortingMode="server"
           sortModel={sortModel}
-          onSortModelChange={setSortModel}
+          onSortModelChange={(newSortModel) =>
+            dispatch({ type: "setSortModel", sortModel: newSortModel })
+          }
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
@@ -245,14 +215,22 @@ export function RestDataTable<T extends HasId>(
           }}
           // disableColumnMenu
           filterMode="server"
-          filterModel={filterModel}
-          onFilterModelChange={setFilterModel}
+          filterModel={gridFilterModel}
+          onFilterModelChange={(newFilterModel) =>
+            dispatch({
+              type: "setGridFilterModel",
+              gridFilterModel: newFilterModel,
+            })
+          }
           // keepNonExistentRowsSelected
           disableSelectionOnClick
           checkboxSelection={!!multiselectActions?.length}
-          onSelectionModelChange={(newSelectionModel) => {
-            setSelectionModel(newSelectionModel);
-          }}
+          onSelectionModelChange={(newSelectionModel) =>
+            dispatch({
+              type: "setSelectionModel",
+              selectionModel: newSelectionModel,
+            })
+          }
           selectionModel={selectionModel}
           componentsProps={{
             toolbar: customToolbarProps,
@@ -287,4 +265,152 @@ export function RestDataTable<T extends HasId>(
       </Box>
     </div>
   );
+}
+
+type State<T> = {
+  rows:
+    | { status: "loading" }
+    | { status: "error" }
+    | { status: "success"; items: T[]; totalItems: number };
+  dateRangeFilter: DateRangeFilter | undefined;
+  gridFilterModel: GridFilterModel;
+  pageSize: number;
+  page: number;
+  selectionModel: GridSelectionModel;
+  sortModel: GridSortModel;
+};
+
+type Actions<T> =
+  | { type: "error" }
+  | { type: "setRows"; items: T[]; totalItems: number }
+  | { type: "setDateRangeFilter"; dateRangeFilter: DateRangeFilter | undefined }
+  | { type: "setGridFilterModel"; gridFilterModel: GridFilterModel }
+  | { type: "setPageSize"; pageSize: number }
+  | { type: "setPage"; page: number }
+  | { type: "setSelectionModel"; selectionModel: GridSelectionModel }
+  | { type: "setSortModel"; sortModel: GridSortModel }
+  | { type: "forceReload" };
+
+function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
+  switch (action.type) {
+    case "error":
+      return {
+        ...state,
+        rows: { status: "error" },
+      };
+    case "setRows":
+      return {
+        ...state,
+        rows: {
+          status: "success",
+          items: action.items,
+          totalItems: action.totalItems,
+        },
+      };
+    case "setDateRangeFilter":
+      return {
+        ...state,
+        rows: { status: "loading" },
+        dateRangeFilter: action.dateRangeFilter,
+        page: 0,
+      };
+    case "setGridFilterModel":
+      return {
+        ...state,
+        rows: { status: "loading" },
+        gridFilterModel: action.gridFilterModel,
+        page: 0,
+      };
+    case "setPageSize":
+      return {
+        ...state,
+        rows: { status: "loading" },
+        pageSize: action.pageSize,
+        page: 0,
+      };
+    case "setPage":
+      return {
+        ...state,
+        rows: { status: "loading" },
+        page: action.page,
+      };
+    case "setSelectionModel":
+      return {
+        ...state,
+        selectionModel: action.selectionModel,
+      };
+    case "setSortModel":
+      return {
+        ...state,
+        rows: { status: "loading" },
+        sortModel: action.sortModel,
+        page: 0,
+      };
+    case "forceReload":
+      return {
+        ...state,
+        rows: { status: "loading" },
+        page: 0,
+      };
+  }
+}
+
+function makeQueryConditions<T extends HasId>(
+  state: State<T>,
+  props: RestDataTableProps<T>
+) {
+  const { dateRangeFilter, gridFilterModel } = state;
+  const {
+    columns,
+    additionalQueryConditions,
+    searchFields,
+    nullableSearchFields,
+  } = props;
+
+  const conditions = [
+    ...(additionalQueryConditions || []),
+    ...makeSearchConditions(
+      gridFilterModel.quickFilterValues,
+      searchFields,
+      nullableSearchFields
+    ),
+  ];
+
+  if (dateRangeFilter) {
+    const usesTime =
+      columns.find((c) => c.field === dateRangeFilter.field)?.type ===
+      "dateTime";
+
+    const startDate = dateRangeFilter.start;
+    let endDate = dateRangeFilter.end;
+
+    // if (usesTime && endDate) {
+    endDate = dayjs(endDate).add(1, "day").toDate();
+    // }
+
+    const startTimeString = startDate?.toISOString();
+    const endTimeString = endDate?.toISOString();
+
+    if (startTimeString) {
+      conditions.push({
+        [dateRangeFilter.field]: {
+          GreaterThanOrEqual: !usesTime
+            ? startTimeString.split("T")[0]
+            : startTimeString,
+        },
+      } as Condition<T>);
+    }
+
+    if (endTimeString) {
+      conditions.push({
+        [dateRangeFilter.field]: {
+          LessThanOrEqual: !usesTime
+            ? endTimeString.split("T")[0]
+            : endTimeString,
+        },
+      } as Condition<T>);
+    }
+  }
+
+  return conditions;
 }
