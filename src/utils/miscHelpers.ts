@@ -18,13 +18,16 @@ export function makeSearchConditions<T>(
 
   searchTerms = searchTerms?.filter((term) => term !== "");
 
-  if (searchTerms?.length && searchProperties?.length) {
+  if (
+    searchTerms?.length &&
+    (searchProperties?.length || nullableSearchProperties?.length)
+  ) {
     const rowConditions: Condition<T>[] = [];
 
     searchTerms?.forEach((term) => {
       const filterValueConditions: Condition<T>[] = [];
 
-      searchProperties.forEach((columnName) => {
+      searchProperties?.forEach((columnName) => {
         filterValueConditions.push({
           [columnName]: {
             StringContains: {
@@ -41,12 +44,12 @@ export function makeSearchConditions<T>(
             IfNotNull: {
               StringContains: {
                 value: term,
-                ignoreCase: true
-              }
-            }
-          }
-        } as unknown as Condition<T>)
-      })
+                ignoreCase: true,
+              },
+            },
+          },
+        } as unknown as Condition<T>);
+      });
 
       rowConditions.push({ Or: filterValueConditions });
     });
