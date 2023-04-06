@@ -107,13 +107,13 @@ export function RestDataTable<T extends HasId>(
 
   const queryCondition: Condition<T> = useMemo(() => {
     const conditions = makeQueryConditions(state, props);
-    return conditions.length === 0 ? { And: conditions } : { Always: true };
-  }, [dateRangeFilter, gridFilterModel]);
+    return conditions.length > 0 ? { And: conditions } : { Always: true };
+  }, [dateRangeFilter, gridFilterModel, dependencies]);
 
   useEffect(() => dispatch({ type: "forceReload" }), dependencies);
 
   useEffect(() => {
-    if (rows.status !== "loading") return;
+    if (rows.status !== "loading" && rows.status !== "changingPage") return;
 
     const orderBy = sortModel
       .filter((s) => !!s.sort)
@@ -122,6 +122,8 @@ export function RestDataTable<T extends HasId>(
         return s.field;
       }) as Query<T>["orderBy"];
 
+    const totalItems = "totalItems" in rows ? rows.totalItems : undefined;
+
     Promise.all([
       restEndpoint.query({
         condition: queryCondition,
@@ -129,7 +131,7 @@ export function RestDataTable<T extends HasId>(
         limit: pageSize,
         orderBy: [...(orderBy ?? []), "-_id"] as Query<T>["orderBy"],
       }),
-      restEndpoint.count(queryCondition),
+      totalItems ?? restEndpoint.count(queryCondition),
     ])
       .then(([items, totalItems]) =>
         dispatch({ type: "setRows", items, totalItems })
@@ -175,9 +177,25 @@ export function RestDataTable<T extends HasId>(
       </Alert>
     );
 
-  const rowItems =
-    rows.status === "loading" ? rows.previousItems ?? [] : rows.items;
-  const totalItems = rows.status === "loading" ? undefined : rows.totalItems;
+  const { rowItems, totalItems } = (() => {
+    if (rows.status === "changingPage") {
+      return {
+        rowItems: rows.previousItems ?? [],
+        totalItems: rows.totalItems,
+      };
+    }
+    if (rows.status === "success") {
+      return {
+        rowItems: rows.items,
+        totalItems: rows.totalItems,
+      };
+    }
+
+    return {
+      rowItems: [],
+      totalItems: 0,
+    };
+  })();
 
   return (
     <div>
@@ -201,7 +219,7 @@ export function RestDataTable<T extends HasId>(
           loading={externalLoading || rows.status === "loading"}
           pagination
           paginationMode="server"
-          rowCount={totalItems ?? 0}
+          rowCount={totalItems}
           sortingMode="server"
           sortModel={sortModel}
           onSortModelChange={(newSortModel) =>
@@ -270,7 +288,8 @@ export function RestDataTable<T extends HasId>(
 
 type State<T> = {
   rows:
-    | { status: "loading"; previousItems?: T[] }
+    | { status: "loading" }
+    | { status: "changingPage"; previousItems: T[]; totalItems: number }
     | { status: "error" }
     | { status: "success"; items: T[]; totalItems: number };
   dateRangeFilter: DateRangeFilter | undefined;
@@ -330,12 +349,16 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
         page: 0,
       };
     case "setPage":
-      const previousItems =
-        state.rows.status === "success" ? state.rows.items : [];
+      const previousRows =
+        state.rows.status === "success" ? state.rows : undefined;
 
       return {
         ...state,
-        rows: { status: "loading", previousItems },
+        rows: {
+          status: "changingPage",
+          previousItems: previousRows?.items ?? [],
+          totalItems: previousRows?.totalItems ?? 0,
+        },
         page: action.page,
       };
     case "setSelectionModel":
