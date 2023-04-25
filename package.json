@@ -1,6 +1,6 @@
 {
   "name": "@lightningkite/mui-lightning-components",
-  "version": "0.9.4",
+  "version": "1.0.0",
   "description": "MUI based React components to use in projects with a Lightning Server backend",
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
   "peerDependencies": {
     "@emotion/react": ">=11.10.5",
     "@emotion/styled": ">=11.10.5",
-    "@lightningkite/lightning-server-simplified": ">=0.5.0",
+    "@lightningkite/lightning-server-simplified": ">=1.0.0",
     "@mui/icons-material": "^5.10.9",
     "@mui/material": ">=5.10.12",
     "@mui/x-data-grid": "^5.17.10",
