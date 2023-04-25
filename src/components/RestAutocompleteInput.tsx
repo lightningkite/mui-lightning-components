@@ -34,6 +34,8 @@ export interface RestAutocompleteInputProps<
   nullableSearchProperties?: (keyof T)[];
   /** Field label */
   label?: string;
+  /** Field placeholder */
+  placeholder?: string;
   /** The currently selected item(s) */
   value: RestAutocompleteValue<T, Multiple>;
   /** Called when the selected item(s) change */
@@ -66,6 +68,7 @@ export function RestAutocompleteInput<
     getOptionLabel,
     getOptionDisabled,
     label,
+    placeholder = "Type to search...",
     searchProperties,
     nullableSearchProperties,
     value,
@@ -138,6 +141,7 @@ export function RestAutocompleteInput<
       }
       inputValue={inputText}
       onInputChange={(_e, value) => setInputText(value)}
+      placeholder={placeholder}
       renderInput={(params) => (
         <TextField
           error={error}
