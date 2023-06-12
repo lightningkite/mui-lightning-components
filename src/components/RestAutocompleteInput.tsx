@@ -1,6 +1,7 @@
 import {
   Condition,
   HasId,
+  Query,
   SessionRestEndpoint,
 } from "@lightningkite/lightning-server-simplified";
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
@@ -51,6 +52,10 @@ export interface RestAutocompleteInputProps<
   /** When any dependencies change, options will be re-fetched from the endpoint */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dependencies?: any[];
+  /** The maximum number of items to fetch at one time from the endpoint */
+  maxFetchLimit?: number;
+  /** The order to sort the results by */
+  orderBy?: Query<T>["orderBy"];
 }
 
 /**
@@ -78,6 +83,8 @@ export function RestAutocompleteInput<
     additionalQueryConditions,
     disabled,
     dependencies = [],
+    maxFetchLimit = 100,
+    orderBy = [],
   } = props;
 
   const [inputText, setInputText] = useState("");
@@ -111,7 +118,8 @@ export function RestAutocompleteInput<
     restEndpoint
       .query({
         condition: conditions.length ? { And: conditions } : { Always: true },
-        limit: 10,
+        limit: maxFetchLimit,
+        orderBy,
       })
       .then(setOptions)
       .finally(() => setFetching(false));
@@ -141,13 +149,13 @@ export function RestAutocompleteInput<
       }
       inputValue={inputText}
       onInputChange={(_e, value) => setInputText(value)}
-      placeholder={placeholder}
       renderInput={(params) => (
         <TextField
           error={error}
           helperText={helperText}
           {...params}
           label={label}
+          placeholder={placeholder}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
