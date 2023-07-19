@@ -10,9 +10,6 @@ nav:
           - Hover Help: guide/hover-help.md
       - Helper Functions:
           - Formik Input Helpers: guide/formik-helpers.md
-          - makeSearchConditions: guide/make-search-conditions.md
-      - Hooks:
-          - useThrottle: guide/use-throttle.md
   - Contributing:
       - Docs: contributing/contributing-docs.md
       - Library: contributing/contributing-library.md

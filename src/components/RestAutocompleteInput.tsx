@@ -4,10 +4,12 @@ import {
   Query,
   SessionRestEndpoint,
 } from "@lightningkite/lightning-server-simplified";
+import {
+  makeSearchConditions,
+  useThrottle,
+} from "@lightningkite/react-lightning-helpers";
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
 import React, { ReactElement, useEffect, useState } from "react";
-import { useThrottle } from "utils/hooks";
-import { makeSearchConditions } from "utils/miscHelpers";
 
 export type RestAutocompleteValue<T, Multiple> = Multiple extends
   | undefined

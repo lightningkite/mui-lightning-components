@@ -23,7 +23,7 @@ import RestDataTableToolbar, {
   DataTableSelectAction,
   ToolbarProps,
 } from "./Toolbar";
-import { makeSearchConditions } from "utils/miscHelpers";
+import { makeSearchConditions } from "@lightningkite/react-lightning-helpers";
 
 // For details on configuring the columns prop, see https://mui.com/x/react-data-grid/column-definition/#headers
 export interface RestDataTableProps<T extends HasId> {
