@@ -1,5 +1,9 @@
 import { CheckboxProps, TextFieldProps } from "@mui/material";
-import { DatePickerProps, DateTimePickerProps } from "@mui/x-date-pickers";
+import {
+  DatePickerProps,
+  DateTimePickerProps,
+  TimePickerProps,
+} from "@mui/x-date-pickers";
 import { Dayjs } from "dayjs";
 import { FormikValues, useFormik } from "formik";
 import React from "react";
@@ -69,7 +73,29 @@ export function makeFormikDateTimePickerProps<T extends FormikValues>(
   field: keyof T
 ): Pick<DateTimePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
   return {
-    value: formik.values[field] as unknown as Dayjs | null,
+    value: formik.values[field] as Dayjs | null,
+    onChange: (value) => {
+      formik.setFieldValue(field.toString(), value);
+    },
+    slotProps: {
+      textField: {
+        helperText:
+          formik.touched[field] &&
+          formik.errors[field] &&
+          "Invalid date or time",
+        error: formik.touched[field] && !!formik.errors[field],
+        fullWidth: true,
+      },
+    },
+  };
+}
+
+export function makeFormikDatePickerProps<T extends FormikValues>(
+  formik: ReturnType<typeof useFormik<T>>,
+  field: keyof T
+): Pick<DatePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
+  return {
+    value: formik.values[field] as Dayjs | null,
     onChange: (value) => {
       formik.setFieldValue(field.toString(), value);
     },
@@ -84,19 +110,19 @@ export function makeFormikDateTimePickerProps<T extends FormikValues>(
   };
 }
 
-export function makeFormikDatePickerProps<T extends FormikValues>(
+export function makeFormikTimePickerProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
   field: keyof T
-): Pick<DatePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
+): Pick<TimePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
   return {
-    value: formik.values[field] as unknown as Dayjs | null,
+    value: formik.values[field] as Dayjs | null,
     onChange: (value) => {
       formik.setFieldValue(field.toString(), value);
     },
     slotProps: {
       textField: {
         helperText:
-          formik.touched[field] && formik.errors[field] && "Invalid date",
+          formik.touched[field] && formik.errors[field] && "Invalid time",
         error: formik.touched[field] && !!formik.errors[field],
         fullWidth: true,
       },
