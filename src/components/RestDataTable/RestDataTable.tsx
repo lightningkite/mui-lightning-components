@@ -6,17 +6,18 @@ import {
 } from "@lightningkite/lightning-server-simplified";
 import { Alert, Box, Paper } from "@mui/material";
 import {
+  ColumnMenuPropsOverrides,
   DataGrid,
   GridActionsCellItem,
-  GridEnrichedColDef,
-  GridColumns,
+  GridColDef,
   GridFilterModel,
-  GridSelectionModel,
+  GridPaginationModel,
+  GridRowSelectionModel,
   GridSortModel,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import React, { ReactElement, useEffect, useMemo, useReducer } from "react";
-import ColumnMenu, { ColumnMenuProps } from "./ColumnMenu";
+import CustomColumnMenu, { CustomColumnMenuProps } from "./CustomColumnMenu";
 import { DateRangeFilter } from "./DateRangeMenuItem";
 import RestDataTableToolbar, {
   DataTableSelectAction,
@@ -24,10 +25,10 @@ import RestDataTableToolbar, {
 } from "./Toolbar";
 import { makeSearchConditions } from "utils/miscHelpers";
 
-// For details on configuring the columns prop, see https://v4.mui.com/components/data-grid/columns/#headers
+// For details on configuring the columns prop, see https://mui.com/x/react-data-grid/column-definition/#headers
 export interface RestDataTableProps<T extends HasId> {
   restEndpoint: Pick<SessionRestEndpoint<T>, "query" | "count">;
-  columns: GridEnrichedColDef<T>[];
+  columns: GridColDef<T>[];
   onRowClick?: (item: T) => void;
   additionalQueryConditions?: Condition<T>[];
   dependencies?: unknown[];
@@ -97,7 +98,7 @@ export function RestDataTable<T extends HasId>(
   };
 
   const customColumnMenuProps: Pick<
-    ColumnMenuProps,
+    CustomColumnMenuProps,
     "dateRangeFilter" | "setDateRangeFilter"
   > = {
     dateRangeFilter,
@@ -139,8 +140,8 @@ export function RestDataTable<T extends HasId>(
       .catch(() => dispatch({ type: "error" }));
   }, [rows.status]);
 
-  const processedColumns = (() => {
-    const temp: GridColumns<T> = columns.map((c) => ({
+  const processedColumns = useMemo(() => {
+    const temp: GridColDef<T>[] = columns.map((c) => ({
       ...c,
       disableColumnMenu: !(
         c.type === "date" ||
@@ -168,7 +169,7 @@ export function RestDataTable<T extends HasId>(
     }
 
     return temp;
-  })();
+  }, [columns, multiselectActions]);
 
   if (rows.status === "error")
     return (
@@ -204,14 +205,13 @@ export function RestDataTable<T extends HasId>(
           rows={rowItems}
           columns={processedColumns}
           rowHeight={60}
-          pageSize={pageSize}
-          rowsPerPageOptions={[5, 10, 20, 50, 100]}
-          onPageSizeChange={(newPageSize) =>
-            dispatch({ type: "setPageSize", pageSize: newPageSize })
-          }
-          page={page}
-          onPageChange={(newPage) =>
-            dispatch({ type: "setPage", page: newPage })
+          pageSizeOptions={[5, 10, 20, 50, 100]}
+          paginationModel={{ page, pageSize }}
+          onPaginationModelChange={(newPaginationModel) =>
+            dispatch({
+              type: "setPaginationModel",
+              paginationModel: newPaginationModel,
+            })
           }
           autoHeight
           getRowId={(row) => row._id}
@@ -228,32 +228,32 @@ export function RestDataTable<T extends HasId>(
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
-          components={{
-            Toolbar: RestDataTableToolbar,
-            ColumnMenu: ColumnMenu,
+          slots={{
+            toolbar: RestDataTableToolbar,
+            columnMenu: CustomColumnMenu,
           }}
           // disableColumnMenu
           filterMode="server"
           filterModel={gridFilterModel}
           onFilterModelChange={(newFilterModel) =>
             dispatch({
-              type: "setGridFilterModel",
-              gridFilterModel: newFilterModel,
+              type: "setFilterModel",
+              filterModel: newFilterModel,
             })
           }
           // keepNonExistentRowsSelected
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           checkboxSelection={!!multiselectActions?.length}
-          onSelectionModelChange={(newSelectionModel) =>
+          onRowSelectionModelChange={(newSelectionModel) =>
             dispatch({
               type: "setSelectionModel",
               selectionModel: newSelectionModel,
             })
           }
-          selectionModel={selectionModel}
-          componentsProps={{
+          rowSelectionModel={selectionModel}
+          slotProps={{
             toolbar: customToolbarProps,
-            columnMenu: customColumnMenuProps,
+            columnMenu: customColumnMenuProps as ColumnMenuPropsOverrides,
           }}
           sx={{
             "& .MuiDataGrid-columnHeaderTitle": {
@@ -296,7 +296,7 @@ type State<T> = {
   gridFilterModel: GridFilterModel;
   pageSize: number;
   page: number;
-  selectionModel: GridSelectionModel;
+  selectionModel: GridRowSelectionModel;
   sortModel: GridSortModel;
 };
 
@@ -304,10 +304,9 @@ type Actions<T> =
   | { type: "error" }
   | { type: "setRows"; items: T[]; totalItems: number }
   | { type: "setDateRangeFilter"; dateRangeFilter: DateRangeFilter | undefined }
-  | { type: "setGridFilterModel"; gridFilterModel: GridFilterModel }
-  | { type: "setPageSize"; pageSize: number }
-  | { type: "setPage"; page: number }
-  | { type: "setSelectionModel"; selectionModel: GridSelectionModel }
+  | { type: "setFilterModel"; filterModel: GridFilterModel }
+  | { type: "setPaginationModel"; paginationModel: GridPaginationModel }
+  | { type: "setSelectionModel"; selectionModel: GridRowSelectionModel }
   | { type: "setSortModel"; sortModel: GridSortModel }
   | { type: "forceReload" };
 
@@ -318,6 +317,7 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
         ...state,
         rows: { status: "error" },
       };
+
     case "setRows":
       return {
         ...state,
@@ -327,6 +327,7 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
           totalItems: action.totalItems,
         },
       };
+
     case "setDateRangeFilter":
       return {
         ...state,
@@ -334,38 +335,46 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
         dateRangeFilter: action.dateRangeFilter,
         page: 0,
       };
-    case "setGridFilterModel":
-      return {
-        ...state,
-        rows: { status: "loading" },
-        gridFilterModel: action.gridFilterModel,
-        page: 0,
-      };
-    case "setPageSize":
-      return {
-        ...state,
-        rows: { status: "loading" },
-        pageSize: action.pageSize,
-        page: 0,
-      };
-    case "setPage":
-      const previousRows =
-        state.rows.status === "success" ? state.rows : undefined;
 
+    case "setFilterModel":
       return {
         ...state,
-        rows: {
-          status: "changingPage",
-          previousItems: previousRows?.items ?? [],
-          totalItems: previousRows?.totalItems ?? 0,
-        },
-        page: action.page,
+        rows: { status: "loading" },
+        gridFilterModel: action.filterModel,
+        page: 0,
       };
+
+    case "setPaginationModel": {
+      if (state.pageSize !== action.paginationModel.pageSize) {
+        return {
+          ...state,
+          rows: { status: "loading" },
+          pageSize: action.paginationModel.pageSize,
+          page: 0,
+        };
+      } else if (state.page !== action.paginationModel.page) {
+        const previousRows =
+          state.rows.status === "success" ? state.rows : undefined;
+
+        return {
+          ...state,
+          rows: {
+            status: "changingPage",
+            previousItems: previousRows?.items ?? [],
+            totalItems: previousRows?.totalItems ?? 0,
+          },
+          page: action.paginationModel.page,
+        };
+      }
+      return state;
+    }
+
     case "setSelectionModel":
       return {
         ...state,
         selectionModel: action.selectionModel,
       };
+
     case "setSortModel":
       return {
         ...state,
@@ -373,6 +382,7 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
         sortModel: action.sortModel,
         page: 0,
       };
+
     case "forceReload":
       return {
         ...state,

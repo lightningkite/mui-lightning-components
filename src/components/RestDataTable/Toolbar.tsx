@@ -1,7 +1,7 @@
 import { ArrowDropDown, Close } from "@mui/icons-material";
 import { Stack, Button, Menu, MenuItem } from "@mui/material";
 import {
-  GridSelectionModel,
+  GridRowSelectionModel,
   GridToolbarContainer,
   GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
@@ -18,7 +18,7 @@ export interface ToolbarProps {
   showQuickFilter: boolean;
   searchHeaderNames: string[];
   selectActions?: DataTableSelectAction[];
-  selectionModel: GridSelectionModel;
+  selectionModel: GridRowSelectionModel;
   dateRangeFilter?: DateRangeFilter;
   setDateRangeFilter: (dateRange: DateRangeFilter | undefined) => void;
 }

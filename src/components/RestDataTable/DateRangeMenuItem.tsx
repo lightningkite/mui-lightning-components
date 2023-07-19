@@ -2,7 +2,6 @@ import { Remove } from "@mui/icons-material";
 import {
   Divider,
   ListItemButton,
-  TextField,
   Stack,
   Dialog,
   DialogTitle,
@@ -11,7 +10,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { GridEnrichedColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
 import { DatePicker } from "@mui/x-date-pickers";
 import React, { FC, useEffect, useState } from "react";
 
@@ -24,7 +23,7 @@ export interface DateRangeFilter {
 export interface DateRangeMenuItemProps {
   initialDateRangeFilter: DateRangeFilter;
   saveDateRangeFilter: (dateRange: DateRangeFilter) => void;
-  column: GridEnrichedColDef;
+  column: GridColDef;
 }
 
 const DateRangeMenuItem: FC<DateRangeMenuItemProps> = (props) => {
@@ -78,9 +77,7 @@ const DateRangeMenuItem: FC<DateRangeMenuItemProps> = (props) => {
           >
             <DatePicker
               label="Start Date"
-              renderInput={(params) => (
-                <TextField {...params} sx={{ width: "100%" }} />
-              )}
+              slotProps={{ textField: { sx: { width: "100%" } } }}
               value={dateRange.start ?? null}
               onChange={(date) => {
                 setDateRange({
@@ -91,9 +88,7 @@ const DateRangeMenuItem: FC<DateRangeMenuItemProps> = (props) => {
             />
             <DatePicker
               label="End Date"
-              renderInput={(params) => (
-                <TextField {...params} sx={{ width: "100%" }} />
-              )}
+              slotProps={{ textField: { sx: { width: "100%" } } }}
               value={dateRange.end ?? null}
               onChange={(date) => {
                 setDateRange({

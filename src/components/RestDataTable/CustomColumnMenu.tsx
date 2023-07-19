@@ -1,34 +1,32 @@
 import {
   GridColumnMenuProps,
   GridColumnMenuContainer,
-  SortGridMenuItems,
-  GridFilterMenuItem,
+  GridColumnMenuSortItem,
+  GridColumnMenuFilterItem,
 } from "@mui/x-data-grid";
 import React, { forwardRef } from "react";
 import DateRangeMenuItem, { DateRangeFilter } from "./DateRangeMenuItem";
 
-export interface ColumnMenuProps extends GridColumnMenuProps {
+export interface CustomColumnMenuProps extends GridColumnMenuProps {
   dateRangeFilter?: DateRangeFilter;
   setDateRangeFilter: (dateRange: DateRangeFilter | undefined) => void;
 }
 
-const ColumnMenu = forwardRef<HTMLUListElement, ColumnMenuProps>(
-  function GridColumnMenu(props: ColumnMenuProps, ref) {
-    const { hideMenu, currentColumn, dateRangeFilter, setDateRangeFilter } =
-      props;
+const CustomColumnMenu = forwardRef<HTMLUListElement, CustomColumnMenuProps>(
+  function GridColumnMenu(props: CustomColumnMenuProps, ref) {
+    const { hideMenu, colDef, dateRangeFilter, setDateRangeFilter } = props;
 
     return (
       <GridColumnMenuContainer ref={ref} {...props}>
-        <SortGridMenuItems onClick={hideMenu} column={currentColumn} />
-        <GridFilterMenuItem onClick={hideMenu} column={currentColumn} />
-        {(props.currentColumn.type === "date" ||
-          props.currentColumn.type === "dateTime") && (
+        <GridColumnMenuSortItem onClick={hideMenu} colDef={colDef} />
+        <GridColumnMenuFilterItem onClick={hideMenu} colDef={colDef} />
+        {(colDef.type === "date" || colDef.type === "dateTime") && (
           <DateRangeMenuItem
-            column={currentColumn}
+            column={colDef}
             initialDateRangeFilter={
-              dateRangeFilter?.field === currentColumn.field
+              dateRangeFilter?.field === colDef.field
                 ? dateRangeFilter
-                : { field: currentColumn.field }
+                : { field: colDef.field }
             }
             saveDateRangeFilter={(filter) =>
               setDateRangeFilter(
@@ -42,4 +40,4 @@ const ColumnMenu = forwardRef<HTMLUListElement, ColumnMenuProps>(
   }
 );
 
-export default ColumnMenu;
+export default CustomColumnMenu;

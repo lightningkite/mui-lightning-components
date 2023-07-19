@@ -1,6 +1,6 @@
 import resolve from "@rollup/plugin-node-resolve";
 import peerDepsExternal from "rollup-plugin-peer-deps-external";
-import pkg from "./package.json";
+import pkg from "./package.json" assert { type: "json" };
 import typescript from "rollup-plugin-typescript2";
 
 const commonOutputOptions = {
