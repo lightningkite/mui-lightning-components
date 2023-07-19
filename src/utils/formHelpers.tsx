@@ -67,14 +67,11 @@ export function makeFormikAutocompleteProps<
 export function makeFormikDateTimePickerProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
   field: keyof T
-): Pick<DateTimePickerProps<Date | Dayjs>, "value" | "onChange" | "slotProps"> {
+): Pick<DateTimePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
   return {
-    value: formik.values[field] as unknown as Date | null,
+    value: formik.values[field] as unknown as Dayjs | null,
     onChange: (value) => {
-      formik.setFieldValue(
-        field.toString(),
-        (value as Dayjs | null)?.toDate() ?? null
-      );
+      formik.setFieldValue(field.toString(), value);
     },
     slotProps: {
       textField: {
@@ -90,14 +87,11 @@ export function makeFormikDateTimePickerProps<T extends FormikValues>(
 export function makeFormikDatePickerProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
   field: keyof T
-): Pick<DatePickerProps<Date | Dayjs>, "value" | "onChange" | "slotProps"> {
+): Pick<DatePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
   return {
-    value: formik.values[field] as unknown as Date | null,
+    value: formik.values[field] as unknown as Dayjs | null,
     onChange: (value) => {
-      formik.setFieldValue(
-        field.toString(),
-        (value as Dayjs | null)?.toDate() ?? null
-      );
+      formik.setFieldValue(field.toString(), value);
     },
     slotProps: {
       textField: {
