@@ -29,13 +29,15 @@ import { makeSearchConditions } from "@lightningkite/react-lightning-helpers";
 export interface RestDataTableProps<T extends HasId> {
   restEndpoint: Pick<SessionRestEndpoint<T>, "query" | "count">;
   columns: GridColDef<T>[];
-  onRowClick?: (item: T) => void;
+  onRowClick?: (item: T, e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   additionalQueryConditions?: Condition<T>[];
   dependencies?: unknown[];
   searchFields?: (keyof T)[];
   nullableSearchFields?: (keyof T)[];
   defaultSorting?: GridSortModel;
   multiselectActions?: DataTableSelectAction[];
+  defaultPageSize?: number;
+  pageSizeOptions?: number[];
   loading?: boolean;
 }
 
@@ -51,7 +53,10 @@ export function RestDataTable<T extends HasId>(
     searchFields,
     nullableSearchFields,
     defaultSorting = [],
+    defaultPageSize = 20,
+    pageSizeOptions = [5, 10, 20, 50, 100],
     multiselectActions,
+
     loading: externalLoading,
   } = props;
 
@@ -59,7 +64,7 @@ export function RestDataTable<T extends HasId>(
     rows: { status: "loading" },
     dateRangeFilter: undefined,
     gridFilterModel: { items: [] },
-    pageSize: 10,
+    pageSize: defaultPageSize,
     page: 0,
     selectionModel: [],
     sortModel: defaultSorting,
@@ -205,7 +210,7 @@ export function RestDataTable<T extends HasId>(
           rows={rowItems}
           columns={processedColumns}
           rowHeight={60}
-          pageSizeOptions={[5, 10, 20, 50, 100]}
+          pageSizeOptions={pageSizeOptions}
           paginationModel={{ page, pageSize }}
           onPaginationModelChange={(newPaginationModel) =>
             dispatch({
@@ -215,7 +220,7 @@ export function RestDataTable<T extends HasId>(
           }
           autoHeight
           getRowId={(row) => row._id}
-          onRowClick={(params) => onRowClick && onRowClick(params.row)}
+          onRowClick={(params, e) => onRowClick && onRowClick(params.row, e)}
           loading={externalLoading || rows.status === "loading"}
           pagination
           paginationMode="server"
