@@ -14,7 +14,6 @@ import {
   GridPaginationModel,
   GridRowSelectionModel,
   GridSortModel,
-  MuiEvent,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import React, { ReactElement, useEffect, useMemo, useReducer } from "react";
