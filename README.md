@@ -50,3 +50,30 @@ A component for displaying help text on hover. The component uses the [Tooltip](
   <Button color="error">Delete</Button>
 </HoverHelp>
 ```
+
+Filter Bar
+
+A component for filtering a list of items. This creates conditions that can be used to filter a REST endpoint.
+
+```tsx
+<FilterBar
+  filterOptions={[
+    {
+      type: "multiSelect",
+      name: "Active Status",
+      placeholder: "User Status",
+      options: ["Active", "Inactive", "Pending"],
+      optionToLabel: (o) => o,
+      optionToID: (v) => v,
+      defaultValue: ["Active"],
+      includeByDefault: true,
+    },
+  ]}
+  onActiveFiltersChange={(activeFilter) => {
+    setFilterConditions(activeFiltersToConditions(activeFilter));
+    setFilterOptions(activeFilter.flatMap((f) => f.value as string));
+  }}
+  activeChipColor="secondary"
+  sx={{ mb: 1 }}
+/>
+```
