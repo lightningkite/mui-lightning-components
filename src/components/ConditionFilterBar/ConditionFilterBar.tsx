@@ -12,37 +12,37 @@ import { HoverHelp } from "components/HoverHelp";
 import React, { ReactElement, useEffect, useState } from "react";
 import { ConditionFilterChip } from "./ConditionFilterChip";
 import {
-  FilterOption,
-  FilterType,
-  FilterTypeValue,
+  ConditionFilterOption,
+  ConditionFilterType,
+  ConditionFilterTypeValue,
 } from "./conditionFilterTypes";
 import { Condition, HasId } from "@lightningkite/lightning-server-simplified";
 
 export interface ConditionFilterBarProps<T extends HasId> {
   sx?: SxProps;
-  filterOptions: FilterOption<any>[];
+  filterOptions: ConditionFilterOption<any>[];
   onActiveFiltersChange: (conditions: Condition<T>[]) => void;
   activeChipColor?: "primary" | "secondary";
 }
 
 export interface ConditionActiveFilter<
   T extends HasId,
-  FILTER_OPTION extends FilterOption<T>
+  FILTER_OPTION extends ConditionFilterOption<T>
 > {
   id: string;
   filterOption: FILTER_OPTION;
-  value: FilterTypeValue<T, FILTER_OPTION["type"]>;
+  value: ConditionFilterTypeValue<T, FILTER_OPTION["type"]>;
 }
 
 const filterOptionInitialValues: {
-  [F in FilterType]: FilterTypeValue<any, F>;
+  [F in ConditionFilterType]: ConditionFilterTypeValue<any, F>;
 } = {
   select: null,
   multiSelect: [],
   unit: true,
 };
 
-export function FilterBar<T extends HasId>(
+export function ConditionFilterBar<T extends HasId>(
   props: ConditionFilterBarProps<T>
 ): ReactElement {
   const {
@@ -53,7 +53,7 @@ export function FilterBar<T extends HasId>(
   } = props;
 
   const [activeFilters, setActiveFilters] = useState<
-    ConditionActiveFilter<any, FilterOption<any>>[]
+    ConditionActiveFilter<any, ConditionFilterOption<any>>[]
   >(
     filterOptions
       .filter((f) => f.includeByDefault === true)
@@ -76,10 +76,16 @@ export function FilterBar<T extends HasId>(
   };
 
   function filterToCondition<T>(
-    activeFilters: ConditionActiveFilter<any, FilterOption<any>>[]
+    activeFilters: ConditionActiveFilter<any, ConditionFilterOption<any>>[]
   ): Condition<T>[] {
     return activeFilters.reduce<Condition<T>[]>((acc, curr) => {
-      acc.push(curr.filterOption.optionToCondition(curr));
+      if (Array.isArray(curr.value)) {
+        curr.value.forEach((v) => {
+          acc.push(curr.filterOption.valuesToCondition(v));
+        });
+      } else {
+        acc.push(curr.filterOption.valuesToCondition(curr.value));
+      }
       return acc;
     }, []);
   }
@@ -105,7 +111,7 @@ export function FilterBar<T extends HasId>(
         </Typography>
       )}
       {activeFilters.map((af) => (
-        <ConditionFilterChip<T, FilterOption<any>>
+        <ConditionFilterChip<T, ConditionFilterOption<any>>
           key={af.id}
           activeFilter={af}
           setActiveFilter={(newFilter) => {

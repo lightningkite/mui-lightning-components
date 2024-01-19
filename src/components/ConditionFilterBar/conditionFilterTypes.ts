@@ -1,10 +1,10 @@
 import { Condition, HasId } from "@lightningkite/lightning-server-simplified";
 
-export type FilterType = "select" | "multiSelect" | "unit";
+export type ConditionFilterType = "select" | "multiSelect" | "unit";
 
-export type FilterTypeValue<
+export type ConditionFilterTypeValue<
   T,
-  FILTER_TYPE extends FilterType
+  FILTER_TYPE extends ConditionFilterType
 > = FILTER_TYPE extends "select"
   ? T | null
   : FILTER_TYPE extends "multiSelect"
@@ -15,19 +15,19 @@ export type FilterTypeValue<
 
 export interface ConditionBaseFilterOption<
   T,
-  FILTER_OPTION extends FilterOption<T>
+  FILTER_OPTION extends ConditionFilterOption<T>
 > {
-  type: FilterType;
+  type: ConditionFilterType;
   name: string;
-  optionToCondition: (
-    option: FilterTypeValue<T, FILTER_OPTION["type"]>
+  valuesToCondition: (
+    values: ConditionFilterTypeValue<T, FILTER_OPTION["type"]>
   ) => Condition<T>;
   includeByDefault?: boolean;
-  defaultValue?: FilterTypeValue<T, FILTER_OPTION["type"]>;
-  optionToID?: (option: FilterTypeValue<T, FILTER_OPTION["type"]>) => string;
-  optionToLabel?: (option: FilterTypeValue<T, FILTER_OPTION["type"]>) => string;
+  defaultValue?: ConditionFilterTypeValue<T, FILTER_OPTION["type"]>;
+  optionToID?: (option: T) => string;
+  optionToLabel?: (option: T) => string;
 }
-
+``;
 export interface ConSelectFilterOption<T>
   extends ConditionBaseFilterOption<T, ConSelectFilterOption<T>> {
   type: "select";
@@ -47,7 +47,7 @@ export interface ConUnitFilterOption
   type: "unit";
 }
 
-export type FilterOption<T> =
+export type ConditionFilterOption<T> =
   | ConSelectFilterOption<T>
   | ConMultiSelectFilterOption<T>
   | ConUnitFilterOption;
