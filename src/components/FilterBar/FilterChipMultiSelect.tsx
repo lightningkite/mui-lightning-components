@@ -10,7 +10,7 @@ const conjunctionFormatter = new Intl.ListFormat("en-US", {
 });
 
 export function FilterChipMultiSelect<T>(
-  props: FilterChipProps<T, MultiSelectFilterOption<T>>
+  props: FilterChipProps<T, Required<MultiSelectFilterOption<T>>>
 ): ReactElement {
   const { activeFilter, setActiveFilter, handleDelete, activeColor } = props;
   const { value, filterOption } = activeFilter;

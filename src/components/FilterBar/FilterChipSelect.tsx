@@ -5,7 +5,7 @@ import { FilterChipProps } from "./FilterChip";
 import { SelectFilterOption } from "./filterTypes";
 
 export function FilterChipSelect<T>(
-  props: FilterChipProps<T, SelectFilterOption<T>>
+  props: FilterChipProps<T, Required<SelectFilterOption<T>>>
 ): ReactElement {
   const { activeFilter, setActiveFilter, handleDelete, activeColor } = props;
   const { value, filterOption } = activeFilter;

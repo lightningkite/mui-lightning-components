@@ -21,7 +21,7 @@ import { Condition, HasId } from "@lightningkite/lightning-server-simplified";
 export interface ConditionFilterBarProps<T extends HasId> {
   sx?: SxProps;
   filterOptions: FilterOption<any>[];
-  onActiveFiltersChange: (activeFilters: Condition<T>[]) => void;
+  onActiveFiltersChange: (conditions: Condition<T>[]) => void;
   activeChipColor?: "primary" | "secondary";
 }
 
@@ -96,11 +96,7 @@ export function FilterBar<T extends HasId>(
       alignItems="center"
       gap={1}
       flexWrap="wrap"
-      sx={{
-        py: 0.5,
-        px: 1,
-        ...sx,
-      }}
+      sx={{ py: 0.5, px: 1, ...sx }}
     >
       <Typography variant="body2">Filters:</Typography>
       {activeFilters.length === 0 && (
@@ -109,7 +105,7 @@ export function FilterBar<T extends HasId>(
         </Typography>
       )}
       {activeFilters.map((af) => (
-        <ConditionFilterChip<any, FilterOption<any>>
+        <ConditionFilterChip<T, FilterOption<any>>
           key={af.id}
           activeFilter={af}
           setActiveFilter={(newFilter) => {

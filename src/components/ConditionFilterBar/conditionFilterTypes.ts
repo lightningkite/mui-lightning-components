@@ -3,7 +3,7 @@ import { Condition, HasId } from "@lightningkite/lightning-server-simplified";
 export type FilterType = "select" | "multiSelect" | "unit";
 
 export type FilterTypeValue<
-  T extends HasId,
+  T,
   FILTER_TYPE extends FilterType
 > = FILTER_TYPE extends "select"
   ? T | null
@@ -14,42 +14,40 @@ export type FilterTypeValue<
   : never;
 
 export interface ConditionBaseFilterOption<
-  T extends HasId,
+  T,
   FILTER_OPTION extends FilterOption<T>
 > {
   type: FilterType;
   name: string;
-  includeByDefault?: boolean;
-  defaultValue?: FilterTypeValue<T, FILTER_OPTION["type"]>;
   optionToCondition: (
     option: FilterTypeValue<T, FILTER_OPTION["type"]>
   ) => Condition<T>;
+  includeByDefault?: boolean;
+  defaultValue?: FilterTypeValue<T, FILTER_OPTION["type"]>;
+  optionToID?: (option: FilterTypeValue<T, FILTER_OPTION["type"]>) => string;
+  optionToLabel?: (option: FilterTypeValue<T, FILTER_OPTION["type"]>) => string;
 }
 
-export interface SelectFilterOption<T extends HasId>
-  extends ConditionBaseFilterOption<T, SelectFilterOption<T>> {
+export interface ConSelectFilterOption<T>
+  extends ConditionBaseFilterOption<T, ConSelectFilterOption<T>> {
   type: "select";
   placeholder?: string;
   options: T[];
-  optionToID: (option: T) => string;
-  optionToLabel: (option: T) => string;
 }
 
-export interface MultiSelectFilterOption<T extends HasId>
-  extends ConditionBaseFilterOption<T, MultiSelectFilterOption<T>> {
+export interface ConMultiSelectFilterOption<T>
+  extends ConditionBaseFilterOption<T, ConMultiSelectFilterOption<T>> {
   type: "multiSelect";
   placeholder?: string;
   options: T[];
-  optionToID: (option: T) => string;
-  optionToLabel: (option: T) => string;
 }
 
-export interface UnitFilterOption
-  extends ConditionBaseFilterOption<never, UnitFilterOption> {
+export interface ConUnitFilterOption
+  extends ConditionBaseFilterOption<never, ConUnitFilterOption> {
   type: "unit";
 }
 
-export type FilterOption<T extends HasId> =
-  | SelectFilterOption<T>
-  | MultiSelectFilterOption<T>
-  | UnitFilterOption;
+export type FilterOption<T> =
+  | ConSelectFilterOption<T>
+  | ConMultiSelectFilterOption<T>
+  | ConUnitFilterOption;

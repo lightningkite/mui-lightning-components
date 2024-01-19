@@ -10,6 +10,8 @@ import {
   SelectFilterOption,
   UnitFilterOption,
 } from "./filterTypes";
+import { capitalize } from "@mui/material";
+import { toRequiredMultiselect, toRequiredSelect } from "./helpers";
 
 export interface FilterChipProps<T, FILTER_OPTION extends FilterOption<T>> {
   activeFilter: ActiveFilter<T, FILTER_OPTION>;
@@ -25,6 +27,9 @@ export function FilterChip<T, FILTER_OPTION extends FilterOption<T>>(
     select: (
       <FilterChipSelect
         {...(props as unknown as FilterChipProps<T, SelectFilterOption<T>>)}
+        activeFilter={toRequiredSelect(
+          props.activeFilter as ActiveFilter<T, SelectFilterOption<T>>
+        )}
       />
     ),
     multiSelect: (
@@ -33,6 +38,9 @@ export function FilterChip<T, FILTER_OPTION extends FilterOption<T>>(
           T,
           MultiSelectFilterOption<T>
         >)}
+        activeFilter={toRequiredMultiselect(
+          props.activeFilter as ActiveFilter<T, MultiSelectFilterOption<T>>
+        )}
       />
     ),
     unit: (

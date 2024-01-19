@@ -23,8 +23,8 @@ export interface SelectFilterOption<T>
   type: "select";
   placeholder: string;
   options: T[];
-  optionToID: (option: T) => string;
-  optionToLabel: (option: T) => string;
+  optionToID?: (option: T) => string;
+  optionToLabel?: (option: T) => string;
 }
 
 export interface MultiSelectFilterOption<T>
@@ -32,8 +32,8 @@ export interface MultiSelectFilterOption<T>
   type: "multiSelect";
   placeholder: string;
   options: T[];
-  optionToID: (option: T) => string;
-  optionToLabel: (option: T) => string;
+  optionToID?: (option: T) => string;
+  optionToLabel?: (option: T) => string;
 }
 
 export interface UnitFilterOption
