@@ -3,7 +3,10 @@ import { Stack, Button, Menu, MenuItem } from "@mui/material";
 import {
   GridRowSelectionModel,
   GridToolbarContainer,
+  GridToolbarProps,
   GridToolbarQuickFilter,
+  QuickFilter,
+  ToolbarPropsOverrides,
 } from "@mui/x-data-grid";
 import { HoverHelp } from "components/HoverHelp";
 import React, { FC, ReactElement, useState } from "react";
@@ -14,7 +17,7 @@ export interface DataTableSelectAction {
   action: (itemIds: string[]) => void | Promise<unknown>;
   icon?: ReactElement;
 }
-export interface ToolbarProps {
+export type ToolbarProps = {
   showQuickFilter: boolean;
   searchHeaderNames: string[];
   selectActions?: DataTableSelectAction[];
@@ -23,7 +26,9 @@ export interface ToolbarProps {
   setDateRangeFilter: (dateRange: DateRangeFilter | undefined) => void;
 }
 
-const RestDataTableToolbar: FC<ToolbarProps> = (props) => {
+const RestDataTableToolbar: FC<
+  GridToolbarProps & ToolbarProps
+> = (props) => {
   const {
     showQuickFilter,
     searchHeaderNames,
@@ -40,14 +45,14 @@ const RestDataTableToolbar: FC<ToolbarProps> = (props) => {
     <GridToolbarContainer>
       {(showQuickFilter ||
         dateRangeFilter ||
-        (!!selectionModel.length && !!selectActions?.length)) && (
+        (!!selectionModel.ids.size && !!selectActions?.length)) && (
         <Stack
           direction="row"
           width="100%"
           sx={{ px: 1, pt: 1, minHeight: "50px" }}
           alignItems="center"
         >
-          {!!selectionModel.length && !!selectActions?.length && (
+          {!!selectionModel.ids.size && !!selectActions?.length && (
             <Button
               onClick={(e) => setActionsMenuAnchor(e.currentTarget)}
               endIcon={<ArrowDropDown />}
@@ -85,15 +90,15 @@ const RestDataTableToolbar: FC<ToolbarProps> = (props) => {
               enableWrapper
               sx={{ width: 320, ml: "auto" }}
             >
-              <GridToolbarQuickFilter
+              <QuickFilter
                 debounceMs={300}
-                size="medium"
+                // size="medium"
                 // helperText={
                 //   showSearchHelperText
                 //     ? `Search by ${searchHeaderNames.join(", ")}`
                 //     : undefined
                 // }
-                sx={{ width: "100%" }}
+                // sx={{ width: "100%" }}
               />
             </HoverHelp>
           )}
@@ -116,7 +121,7 @@ const RestDataTableToolbar: FC<ToolbarProps> = (props) => {
           <MenuItem
             key={action.label}
             onClick={() => {
-              action.action(selectionModel as string[]);
+              action.action([...selectionModel.ids] as string[]);
               setActionsMenuAnchor(null);
             }}
           >

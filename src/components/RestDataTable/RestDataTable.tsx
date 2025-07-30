@@ -2,7 +2,7 @@ import {
   Condition,
   HasId,
   Query,
-  SessionRestEndpoint,
+  RestEndpoint,
 } from "@lightningkite/lightning-server-simplified";
 import { Alert, Box, Paper } from "@mui/material";
 import {
@@ -23,11 +23,11 @@ import RestDataTableToolbar, {
   DataTableSelectAction,
   ToolbarProps,
 } from "./Toolbar";
-import { makeSearchConditions } from "@lightningkite/react-lightning-helpers";
+import { makeSearchConditions } from "utils/miscHelpers";
 
 // For details on configuring the columns prop, see https://mui.com/x/react-data-grid/column-definition/#headers
 export interface RestDataTableProps<T extends HasId> {
-  restEndpoint: Pick<SessionRestEndpoint<T>, "query" | "count">;
+  restEndpoint: Pick<RestEndpoint<T>, "query" | "count">;
   columns: GridColDef<T>[];
   onRowClick?: (item: T, e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   additionalQueryConditions?: Condition<T>[];
@@ -66,7 +66,7 @@ export function RestDataTable<T extends HasId>(
     gridFilterModel: { items: [] },
     pageSize: defaultPageSize,
     page: 0,
-    selectionModel: [],
+    selectionModel: { ids: new Set<string>(), type: "include" },
     sortModel: defaultSorting,
   });
 
@@ -150,7 +150,7 @@ export function RestDataTable<T extends HasId>(
       ...c,
       disableColumnMenu: !(
         c.type === "date" ||
-        c.type === "datetime" ||
+        // c.type === "datetime" ||
         c.sortable !== false
       ),
     }));
@@ -234,8 +234,8 @@ export function RestDataTable<T extends HasId>(
           disableColumnSelector
           disableDensitySelector
           slots={{
-            toolbar: RestDataTableToolbar,
-            columnMenu: CustomColumnMenu,
+            toolbar: RestDataTableToolbar as any,
+            columnMenu: CustomColumnMenu as any,
           }}
           // disableColumnMenu
           filterMode="server"

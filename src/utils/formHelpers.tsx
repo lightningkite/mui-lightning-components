@@ -6,7 +6,6 @@ import {
 } from "@mui/x-date-pickers";
 import { Dayjs } from "dayjs";
 import { FormikValues, useFormik } from "formik";
-import React from "react";
 
 export function makeFormikTextFieldProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
@@ -71,7 +70,7 @@ export function makeFormikAutocompleteProps<
 export function makeFormikDateTimePickerProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
   field: keyof T
-): Pick<DateTimePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
+): Pick<DateTimePickerProps<true>, "value" | "onChange" | "slotProps"> {
   return {
     value: formik.values[field] as Dayjs | null,
     onChange: (value) => {
@@ -93,7 +92,7 @@ export function makeFormikDateTimePickerProps<T extends FormikValues>(
 export function makeFormikDatePickerProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
   field: keyof T
-): Pick<DatePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
+): Pick<DatePickerProps<true>, "value" | "onChange" | "slotProps"> {
   return {
     value: formik.values[field] as Dayjs | null,
     onChange: (value) => {
@@ -113,7 +112,7 @@ export function makeFormikDatePickerProps<T extends FormikValues>(
 export function makeFormikTimePickerProps<T extends FormikValues>(
   formik: ReturnType<typeof useFormik<T>>,
   field: keyof T
-): Pick<TimePickerProps<Dayjs>, "value" | "onChange" | "slotProps"> {
+): Pick<TimePickerProps<true>, "value" | "onChange" | "slotProps"> {
   return {
     value: formik.values[field] as Dayjs | null,
     onChange: (value) => {
