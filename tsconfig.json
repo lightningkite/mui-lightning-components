@@ -9,7 +9,7 @@
     "module": "esnext",
     "lib": ["ESNext", "dom"],
     "allowJs": false,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist",

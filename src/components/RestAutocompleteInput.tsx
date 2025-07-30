@@ -2,14 +2,10 @@ import {
   Condition,
   HasId,
   Query,
-  SessionRestEndpoint,
+  RestEndpoint,
 } from "@lightningkite/lightning-server-simplified";
-import {
-  makeSearchConditions,
-  useThrottle,
-} from "@lightningkite/react-lightning-helpers";
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
-import React, { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useRef, useState } from "react";
 
 export type RestAutocompleteValue<T, Multiple> = Multiple extends
   | undefined
@@ -22,7 +18,7 @@ export interface RestAutocompleteInputProps<
   Multiple extends boolean | undefined
 > {
   /** The model rest endpoint to fetch options from */
-  restEndpoint: SessionRestEndpoint<T>;
+  restEndpoint: RestEndpoint<T>;
   /** True to allow the user to select multiple options */
   multiple?: Multiple;
   /** Additional conditions to filter the values when requested from the endpoint */
@@ -161,16 +157,97 @@ export function RestAutocompleteInput<
           InputProps={{
             ...params.InputProps,
             endAdornment: (
-              <React.Fragment>
+              <>
                 {loading ? (
                   <CircularProgress color="inherit" size={20} />
                 ) : null}
                 {params.InputProps.endAdornment}
-              </React.Fragment>
+              </>
             ),
           }}
         />
       )}
     />
   );
+}
+
+function useThrottle<T>(value: T, interval = 500): T {
+  const [throttledValue, setThrottledValue] = useState<T>(value);
+  const lastExecuted = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (Date.now() >= lastExecuted.current + interval) {
+      lastExecuted.current = Date.now();
+      setThrottledValue(value);
+    } else {
+      const timerId = setTimeout(() => {
+        lastExecuted.current = Date.now();
+        setThrottledValue(value);
+      }, interval);
+
+      return () => clearTimeout(timerId);
+    }
+  }, [value, interval]);
+
+  return throttledValue;
+}
+
+/**
+ * Returns a lightning server condition that will match any items
+ * where any of the search terms occur in any of an objects properties
+ *
+ * @param searchTerms an array of search terms
+ * @param searchProperties non-nullable properties to search
+ * @param nullableSearchProperties nullable properties to search
+ * @returns a lightning server condition
+ */
+function makeSearchConditions<T>(
+  searchTerms: string[] | undefined,
+  searchProperties: (keyof T)[] | undefined,
+  nullableSearchProperties?: (keyof T)[] | undefined
+): Condition<T>[] {
+  const conditions: Condition<T>[] = [];
+
+  searchTerms = searchTerms?.filter((term) => term !== "");
+
+  if (
+    searchTerms?.length &&
+    (searchProperties?.length || nullableSearchProperties?.length)
+  ) {
+    const rowConditions: Condition<T>[] = [];
+
+    searchTerms?.forEach((term) => {
+      const filterValueConditions: Condition<T>[] = [];
+
+      searchProperties?.forEach((columnName) => {
+        filterValueConditions.push({
+          [columnName]: {
+            StringContains: {
+              value: term,
+              ignoreCase: true,
+            },
+          },
+        } as unknown as Condition<T>);
+      });
+
+      nullableSearchProperties?.forEach((columnName) => {
+        filterValueConditions.push({
+          [columnName as keyof T]: {
+            IfNotNull: {
+              StringContains: {
+                value: term,
+                ignoreCase: true,
+              },
+            },
+          },
+        } as unknown as Condition<T>);
+      });
+
+      rowConditions.push({ Or: filterValueConditions });
+    });
+
+    conditions.push({ And: rowConditions });
+  }
+
+  return conditions;
 }
