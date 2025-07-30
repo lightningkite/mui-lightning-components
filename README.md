@@ -1,5 +1,7 @@
 # MUI Lightning Components
 
+[![npm latest package](https://img.shields.io/npm/v/@lightningkite/mui-lightning-components/latest.svg)](https://www.npmjs.com/package/@lightningkite/mui-lightning-components)  
+
 MUI based React components to use in projects with a Lightning Server backend.
 
 ## Rest Data Table
