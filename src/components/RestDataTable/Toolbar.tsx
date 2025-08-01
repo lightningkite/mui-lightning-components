@@ -1,16 +1,25 @@
-import { ArrowDropDown, Close } from "@mui/icons-material";
-import { Stack, Button, Menu, MenuItem } from "@mui/material";
+import { ArrowDropDown, Cancel, Close, Search } from "@mui/icons-material";
+import {
+  Stack,
+  Button,
+  Menu,
+  MenuItem,
+  styled,
+  Tooltip,
+  TextField,
+  InputAdornment,
+} from "@mui/material";
 import {
   GridRowSelectionModel,
-  GridToolbarContainer,
   GridToolbarProps,
-  GridToolbarQuickFilter,
   QuickFilter,
-  ToolbarPropsOverrides,
+  QuickFilterClear,
+  QuickFilterControl,
+  Toolbar,
+  QuickFilterTrigger,
+  ToolbarButton,
 } from "@mui/x-data-grid";
-import { HoverHelp } from "components/HoverHelp";
-import React, { FC, ReactElement, useState } from "react";
-import { DateRangeFilter } from "./DateRangeMenuItem";
+import { FC, ReactElement, useState } from "react";
 
 export interface DataTableSelectAction {
   label: string;
@@ -18,97 +27,82 @@ export interface DataTableSelectAction {
   icon?: ReactElement;
 }
 export type ToolbarProps = {
-  showQuickFilter: boolean;
   searchHeaderNames: string[];
   selectActions?: DataTableSelectAction[];
   selectionModel: GridRowSelectionModel;
-  dateRangeFilter?: DateRangeFilter;
-  setDateRangeFilter: (dateRange: DateRangeFilter | undefined) => void;
-}
+};
 
-const RestDataTableToolbar: FC<
-  GridToolbarProps & ToolbarProps
-> = (props) => {
-  const {
-    showQuickFilter,
-    searchHeaderNames,
-    selectActions,
-    selectionModel,
-    dateRangeFilter,
-    setDateRangeFilter,
-  } = props;
+const RestDataTableToolbar: FC<GridToolbarProps & ToolbarProps> = (props) => {
+  const { searchHeaderNames, selectActions, selectionModel } = props;
 
   const [actionsMenuAnchor, setActionsMenuAnchor] =
     useState<null | HTMLElement>(null);
 
   return (
-    <GridToolbarContainer>
-      {(showQuickFilter ||
-        dateRangeFilter ||
-        (!!selectionModel.ids.size && !!selectActions?.length)) && (
-        <Stack
-          direction="row"
-          width="100%"
-          sx={{ px: 1, pt: 1, minHeight: "50px" }}
-          alignItems="center"
+    <Toolbar>
+      {!!selectionModel.ids.size && !!selectActions?.length && (
+        <Button
+          onClick={(e) => setActionsMenuAnchor(e.currentTarget)}
+          endIcon={<ArrowDropDown />}
+          variant="outlined"
+          sx={{ mr: 1 }}
         >
-          {!!selectionModel.ids.size && !!selectActions?.length && (
-            <Button
-              onClick={(e) => setActionsMenuAnchor(e.currentTarget)}
-              endIcon={<ArrowDropDown />}
-              // variant="outlined"
-              sx={{ mr: 1 }}
-            >
-              Actions
-            </Button>
-          )}
+          Actions
+        </Button>
+      )}
 
-          {dateRangeFilter && (
-            <Button
-              // variant="outlined"
-              // size="small"
-              onClick={() => setDateRangeFilter(undefined)}
-              startIcon={<Close />}
-            >
-              {(() => {
-                if (dateRangeFilter.start && dateRangeFilter.end) {
-                  return `${dateRangeFilter.start.toLocaleDateString()} – ${dateRangeFilter.end.toLocaleDateString()}`;
-                }
-                if (dateRangeFilter.start) {
-                  return `From ${dateRangeFilter.start.toLocaleDateString()}`;
-                }
-                if (dateRangeFilter.end) {
-                  return `Through ${dateRangeFilter.end.toLocaleDateString()}`;
-                }
-              })()}
-            </Button>
-          )}
-
-          {showQuickFilter && (
-            <HoverHelp
-              description={`Search by ${searchHeaderNames.join(", ")}`}
-              enableWrapper
-              sx={{ width: 320, ml: "auto" }}
-            >
-              <QuickFilter
-                debounceMs={300}
-                // size="medium"
-                // helperText={
-                //   showSearchHelperText
-                //     ? `Search by ${searchHeaderNames.join(", ")}`
-                //     : undefined
-                // }
-                // sx={{ width: "100%" }}
+      {searchHeaderNames.length > 0 && (
+        <QuickFilter>
+          <QuickFilterTrigger
+            render={(triggerProps, state) => (
+              <Tooltip title="Search" enterDelay={0}>
+                <StyledToolbarButton
+                  {...triggerProps}
+                  ownerState={{ expanded: state.expanded }}
+                  color="default"
+                  aria-disabled={state.expanded}
+                >
+                  <Search fontSize="small" />
+                </StyledToolbarButton>
+              </Tooltip>
+            )}
+          />
+          <QuickFilterControl
+            render={({ ref, ...controlProps }, state) => (
+              <StyledTextField
+                {...controlProps}
+                ownerState={{ expanded: state.expanded }}
+                inputRef={ref}
+                aria-label="Search"
+                placeholder="Search..."
+                size="small"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: state.value ? (
+                      <InputAdornment position="end">
+                        <QuickFilterClear
+                          edge="end"
+                          size="small"
+                          aria-label="Clear search"
+                          material={{ sx: { marginRight: -0.75 } }}
+                        >
+                          <Cancel fontSize="small" />
+                        </QuickFilterClear>
+                      </InputAdornment>
+                    ) : null,
+                    ...controlProps.slotProps?.input,
+                  },
+                  ...controlProps.slotProps,
+                }}
               />
-            </HoverHelp>
-          )}
-          {/* <GridToolbarExport
-          printOptions={{
-            hideFooter: true,
-            hideToolbar: true
-          }}
-        /> */}
-        </Stack>
+            )}
+          />
+        </QuickFilter>
       )}
 
       <Menu
@@ -129,8 +123,34 @@ const RestDataTableToolbar: FC<
           </MenuItem>
         ))}
       </Menu>
-    </GridToolbarContainer>
+    </Toolbar>
   );
 };
+
+type OwnerState = {
+  expanded: boolean;
+};
+
+const StyledToolbarButton = styled(ToolbarButton)<{ ownerState: OwnerState }>(
+  ({ theme, ownerState }) => ({
+    gridArea: "1 / 1",
+    width: "min-content",
+    height: "min-content",
+    zIndex: 1,
+    opacity: ownerState.expanded ? 0 : 1,
+    pointerEvents: ownerState.expanded ? "none" : "auto",
+    transition: theme.transitions.create(["opacity"]),
+  })
+);
+
+const StyledTextField = styled(TextField)<{
+  ownerState: OwnerState;
+}>(({ theme, ownerState }) => ({
+  gridArea: "1 / 1",
+  overflowX: "clip",
+  width: ownerState.expanded ? 260 : "var(--trigger-width)",
+  opacity: ownerState.expanded ? 1 : 0,
+  transition: theme.transitions.create(["width", "opacity"]),
+}));
 
 export default RestDataTableToolbar;

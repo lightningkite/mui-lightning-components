@@ -2,12 +2,12 @@ import {
   Condition,
   HasId,
   Query,
-  RestEndpoint,
+  SortPart,
 } from "@lightningkite/lightning-server-simplified";
 import { Alert, Box, Paper } from "@mui/material";
 import {
-  ColumnMenuPropsOverrides,
   DataGrid,
+  DataGridProps,
   GridActionsCellItem,
   GridColDef,
   GridFilterModel,
@@ -15,54 +15,71 @@ import {
   GridRowSelectionModel,
   GridSortModel,
 } from "@mui/x-data-grid";
-import dayjs from "dayjs";
-import React, { ReactElement, useEffect, useMemo, useReducer } from "react";
-import CustomColumnMenu, { CustomColumnMenuProps } from "./CustomColumnMenu";
-import { DateRangeFilter } from "./DateRangeMenuItem";
+import {
+  DependencyList,
+  ReactElement,
+  useEffect,
+  useMemo,
+  useReducer,
+} from "react";
+import CustomColumnMenu from "./CustomColumnMenu";
 import RestDataTableToolbar, {
   DataTableSelectAction,
   ToolbarProps,
 } from "./Toolbar";
 import { makeSearchConditions } from "utils/miscHelpers";
+import { useActiveEffect } from "utils/useActiveEffect";
+
+export interface GetRowsParams<I extends HasId> {
+  searchCondition: Condition<I>;
+  orderBy?: SortPart<I>[];
+}
+
+export interface PageGetterParams {
+  skip: number;
+  limit: number;
+}
+
+export type PageGetter<I> = (params: PageGetterParams) => Promise<I[]>;
+
+export type GetRows<I extends HasId, R> = (params: GetRowsParams<I>) => {
+  getCount: (c: Condition<I>) => Promise<number>; // Passing the condition back in makes this easier for actions
+  pageGetter: PageGetter<R>;
+  condition: Condition<I>;
+};
 
 // For details on configuring the columns prop, see https://mui.com/x/react-data-grid/column-definition/#headers
-export interface RestDataTableProps<T extends HasId> {
-  restEndpoint: Pick<RestEndpoint<T>, "query" | "count">;
+export interface RestDataTableProps<T extends HasId, A extends HasId = T> {
+  getRows: GetRows<T, A>;
   columns: GridColDef<T>[];
-  onRowClick?: (item: T, e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-  additionalQueryConditions?: Condition<T>[];
-  dependencies?: unknown[];
+  onRowClick?: (item: T) => void;
+  dependencies?: DependencyList;
   searchFields?: (keyof T)[];
   nullableSearchFields?: (keyof T)[];
   defaultSorting?: GridSortModel;
   multiselectActions?: DataTableSelectAction[];
   defaultPageSize?: number;
-  pageSizeOptions?: number[];
-  loading?: boolean;
+  dataGridProps: Partial<DataGridProps<T>>;
 }
 
-export function RestDataTable<T extends HasId>(
-  props: RestDataTableProps<T>
+export function RestDataTable<T extends HasId, A extends HasId>(
+  props: RestDataTableProps<T, A>
 ): ReactElement | null {
   const {
     onRowClick,
-    additionalQueryConditions,
-    restEndpoint,
+    getRows,
     columns,
     dependencies,
     searchFields,
     nullableSearchFields,
     defaultSorting = [],
     defaultPageSize = 20,
-    pageSizeOptions = [5, 10, 20, 50, 100],
     multiselectActions,
-
-    loading: externalLoading,
+    dataGridProps,
   } = props;
 
   const [state, dispatch] = useReducer(reducer<T>, {
     rows: { status: "loading" },
-    dateRangeFilter: undefined,
     gridFilterModel: { items: [] },
     pageSize: defaultPageSize,
     page: 0,
@@ -70,23 +87,12 @@ export function RestDataTable<T extends HasId>(
     sortModel: defaultSorting,
   });
 
-  const {
-    rows,
-    dateRangeFilter,
-    gridFilterModel,
-    pageSize,
-    page,
-    selectionModel,
-    sortModel,
-  } = state;
+  const { rows, gridFilterModel, pageSize, page, selectionModel, sortModel } =
+    state;
 
   const customToolbarProps: ToolbarProps = {
     selectActions: multiselectActions,
     selectionModel,
-    showQuickFilter: !!searchFields?.length || !!nullableSearchFields?.length,
-    dateRangeFilter,
-    setDateRangeFilter: (newFilter) =>
-      dispatch({ type: "setDateRangeFilter", dateRangeFilter: newFilter }),
     searchHeaderNames: (() => {
       const searchFieldStrings = searchFields?.map((c) => c.toString()) || [];
       const nullableSearchFieldString =
@@ -102,55 +108,60 @@ export function RestDataTable<T extends HasId>(
     })(),
   };
 
-  const customColumnMenuProps: Pick<
-    CustomColumnMenuProps,
-    "dateRangeFilter" | "setDateRangeFilter"
-  > = {
-    dateRangeFilter,
-    setDateRangeFilter: (newFilter) =>
-      dispatch({ type: "setDateRangeFilter", dateRangeFilter: newFilter }),
-  };
-
-  const queryCondition: Condition<T> = useMemo(() => {
-    const conditions = makeQueryConditions(state, props);
-    return conditions.length > 0 ? { And: conditions } : { Always: true };
-  }, [dateRangeFilter, gridFilterModel, dependencies, additionalQueryConditions]);
+  const queryCondition: Condition<T> = useMemo(
+    () => ({
+      And: [
+        ...makeSearchConditions(
+          gridFilterModel.quickFilterValues,
+          searchFields,
+          nullableSearchFields
+        ),
+      ],
+    }),
+    [gridFilterModel, dependencies]
+  );
 
   useEffect(() => dispatch({ type: "forceReload" }), dependencies);
 
-  useEffect(() => {
-    if (rows.status !== "loading" && rows.status !== "changingPage") return;
+  useActiveEffect(
+    (getActive) => {
+      const orderBy = sortModel
+        .filter((s) => !!s.sort)
+        .map((s) => {
+          if (s.sort === "desc") return "-" + s.field;
+          return s.field;
+        }) as Query<T>["orderBy"];
 
-    const orderBy = sortModel
-      .filter((s) => !!s.sort)
-      .map((s) => {
-        if (s.sort === "desc") return "-" + s.field;
-        return s.field;
-      }) as Query<T>["orderBy"];
+      const totalItems = "totalItems" in rows ? rows.totalItems : undefined;
 
-    const totalItems = "totalItems" in rows ? rows.totalItems : undefined;
-
-    Promise.all([
-      restEndpoint.query({
-        condition: queryCondition,
-        skip: page * pageSize,
-        limit: pageSize,
-        orderBy: [...(orderBy ?? []), "-_id"] as Query<T>["orderBy"],
-      }),
-      totalItems ?? restEndpoint.count(queryCondition),
-    ])
-      .then(([items, totalItems]) =>
-        dispatch({ type: "setRows", items, totalItems })
-      )
-      .catch(() => dispatch({ type: "error" }));
-  }, [rows.status]);
+      const getter = getRows({
+        orderBy: [...(orderBy ?? []), "-_id"],
+        searchCondition: queryCondition,
+      });
+      Promise.all([
+        getter.pageGetter({ skip: page * pageSize, limit: pageSize }),
+        totalItems ?? getter.getCount(queryCondition),
+      ])
+        .then(([items, totalItems]) => {
+          if (getActive()) {
+            dispatch({
+              type: "setRows",
+              items: items as unknown as T[],
+              totalItems,
+            });
+          }
+        })
+        .catch(() => dispatch({ type: "error" }));
+    },
+    [rows.status, queryCondition]
+  );
 
   const processedColumns = useMemo(() => {
     const temp: GridColDef<T>[] = columns.map((c) => ({
       ...c,
       disableColumnMenu: !(
         c.type === "date" ||
-        // c.type === "datetime" ||
+        c.type === "dateTime" ||
         c.sortable !== false
       ),
     }));
@@ -210,7 +221,7 @@ export function RestDataTable<T extends HasId>(
           rows={rowItems}
           columns={processedColumns}
           rowHeight={60}
-          pageSizeOptions={pageSizeOptions}
+          pageSizeOptions={[5, 10, 20, 50, 100]}
           paginationModel={{ page, pageSize }}
           onPaginationModelChange={(newPaginationModel) =>
             dispatch({
@@ -218,10 +229,9 @@ export function RestDataTable<T extends HasId>(
               paginationModel: newPaginationModel,
             })
           }
-          autoHeight
           getRowId={(row) => row._id}
-          onRowClick={(params, e) => onRowClick && onRowClick(params.row, e)}
-          loading={externalLoading || rows.status === "loading"}
+          onRowClick={(params) => onRowClick?.(params.row)}
+          loading={rows.status === "loading"}
           pagination
           paginationMode="server"
           rowCount={totalItems}
@@ -237,6 +247,7 @@ export function RestDataTable<T extends HasId>(
             toolbar: RestDataTableToolbar as any,
             columnMenu: CustomColumnMenu as any,
           }}
+          showToolbar
           // disableColumnMenu
           filterMode="server"
           filterModel={gridFilterModel}
@@ -258,7 +269,6 @@ export function RestDataTable<T extends HasId>(
           rowSelectionModel={selectionModel}
           slotProps={{
             toolbar: customToolbarProps,
-            columnMenu: customColumnMenuProps as ColumnMenuPropsOverrides,
           }}
           sx={{
             "& .MuiDataGrid-columnHeaderTitle": {
@@ -285,6 +295,7 @@ export function RestDataTable<T extends HasId>(
               outline: "none !important",
             },
           }}
+          {...dataGridProps}
         />
       </Box>
     </div>
@@ -297,7 +308,6 @@ type State<T> = {
     | { status: "changingPage"; previousItems: T[]; totalItems: number }
     | { status: "error" }
     | { status: "success"; items: T[]; totalItems: number };
-  dateRangeFilter: DateRangeFilter | undefined;
   gridFilterModel: GridFilterModel;
   pageSize: number;
   page: number;
@@ -308,7 +318,6 @@ type State<T> = {
 type Actions<T> =
   | { type: "error" }
   | { type: "setRows"; items: T[]; totalItems: number }
-  | { type: "setDateRangeFilter"; dateRangeFilter: DateRangeFilter | undefined }
   | { type: "setFilterModel"; filterModel: GridFilterModel }
   | { type: "setPaginationModel"; paginationModel: GridPaginationModel }
   | { type: "setSelectionModel"; selectionModel: GridRowSelectionModel }
@@ -331,14 +340,6 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
           items: action.items,
           totalItems: action.totalItems,
         },
-      };
-
-    case "setDateRangeFilter":
-      return {
-        ...state,
-        rows: { status: "loading" },
-        dateRangeFilter: action.dateRangeFilter,
-        page: 0,
       };
 
     case "setFilterModel":
@@ -395,64 +396,4 @@ function reducer<T>(state: State<T>, action: Actions<T>): State<T> {
         page: 0,
       };
   }
-}
-
-function makeQueryConditions<T extends HasId>(
-  state: State<T>,
-  props: RestDataTableProps<T>
-) {
-  const { dateRangeFilter, gridFilterModel } = state;
-  const {
-    columns,
-    additionalQueryConditions,
-    searchFields,
-    nullableSearchFields,
-  } = props;
-
-  const conditions = [
-    ...(additionalQueryConditions || []),
-    ...makeSearchConditions(
-      gridFilterModel.quickFilterValues,
-      searchFields,
-      nullableSearchFields
-    ),
-  ];
-
-  if (dateRangeFilter) {
-    const usesTime =
-      columns.find((c) => c.field === dateRangeFilter.field)?.type ===
-      "dateTime";
-
-    const startDate = dateRangeFilter.start;
-    let endDate = dateRangeFilter.end;
-
-    // if (usesTime && endDate) {
-    endDate = dayjs(endDate).add(1, "day").toDate();
-    // }
-
-    const startTimeString = startDate?.toISOString();
-    const endTimeString = endDate?.toISOString();
-
-    if (startTimeString) {
-      conditions.push({
-        [dateRangeFilter.field]: {
-          GreaterThanOrEqual: !usesTime
-            ? startTimeString.split("T")[0]
-            : startTimeString,
-        },
-      } as Condition<T>);
-    }
-
-    if (endTimeString) {
-      conditions.push({
-        [dateRangeFilter.field]: {
-          LessThanOrEqual: !usesTime
-            ? endTimeString.split("T")[0]
-            : endTimeString,
-        },
-      } as Condition<T>);
-    }
-  }
-
-  return conditions;
 }
