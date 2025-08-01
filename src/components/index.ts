@@ -2,4 +2,4 @@ export * from "./RestAutocompleteInput";
 export * from "./HoverHelp";
 export * from "./RestDataTable";
 export * from "./FilterBar";
-export * from "./FilterBar2";
+export * from "./FilterBar";

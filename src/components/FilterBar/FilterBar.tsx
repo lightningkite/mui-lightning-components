@@ -4,81 +4,68 @@ import {
   Menu,
   MenuItem,
   Paper,
-  SxProps,
-  Typography,
   Stack,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import { HoverHelp } from "components/HoverHelp";
-import React, { ReactElement, useEffect, useState } from "react";
-import { FilterChip } from "./FilterChip";
-import { FilterOption, FilterType, FilterTypeValue } from "./filterTypes";
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 
-export interface FilterBarProps {
-  sx?: SxProps;
-  filterOptions: FilterOption<any>[];
-  onActiveFiltersChange: (
-    activeFilters: ActiveFilter<any, FilterOption<any>>[]
-  ) => void;
-  activeChipColor?: "primary" | "secondary";
-}
-
-export interface ActiveFilter<T, FILTER_OPTION extends FilterOption<T>> {
-  id: string;
-  filterOption: FILTER_OPTION;
-  value: FilterTypeValue<T, FILTER_OPTION["type"]>;
-}
-
-const filterOptionInitialValues: {
-  [F in FilterType]: FilterTypeValue<any, F>;
-} = {
-  select: null,
-  multiSelect: [],
-  unit: true,
+export type FilterChipProps<V, P> = {
+  value: V[];
+  setValue: (v: V[]) => void;
+  remove: () => void;
+  filterType: FilterType<V, P>;
 };
 
-export function FilterBar(props: FilterBarProps): ReactElement {
-  const {
-    sx,
-    filterOptions,
-    onActiveFiltersChange,
-    activeChipColor = "primary",
-  } = props;
+export type FilterType<V = any, P = any> = {
+  processor: (v: V[]) => P;
+  FilterChip: FC<FilterChipProps<V, P>>;
+  menuLabel: string;
+  state: V[] | null;
+  availability?: "hidden" | "disabled-inactive" | "available";
+};
 
-  const [activeFilters, setActiveFilters] = useState<
-    ActiveFilter<any, FilterOption<any>>[]
-  >(
-    filterOptions
-      .filter((f) => f.includeByDefault === true)
-      .map((filterOption) => ({
-        id: crypto.randomUUID(),
-        value:
-          filterOption.defaultValue ??
-          filterOptionInitialValues[filterOption.type],
-        filterOption,
-      }))
-  );
+type ValueOf<FT extends FilterType> = Parameters<FT["processor"]>[0];
+type ProcessorOf<FT extends FilterType> = ReturnType<FT["processor"]>;
+
+type FilterStates<FT extends Record<string, FilterType>> = {
+  [K in keyof FT]: ValueOf<FT[K]> | null;
+};
+
+export const FilterBar = <FT extends Record<string, FilterType>>(props: {
+  filterTypes: FT;
+  setProducts: (
+    products: { [K in keyof FT]: ProcessorOf<FT[K]> }[keyof FT][]
+  ) => void;
+  setFilterState?: (filters: FilterStates<FT>) => void;
+}): React.ReactNode => {
+  const { filterTypes, setProducts, setFilterState } = props;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const initFilters = useMemo(
+    () =>
+      Object.keys(filterTypes).reduce((acc, k) => {
+        const curr = filterTypes[k];
+        (acc as any)[k] = curr?.state ?? null;
+        return acc;
+      }, {} as FilterStates<FT>),
+    [filterTypes]
+  );
 
-  const handleDelete =
-    (chipToDelete: ActiveFilter<any, FilterOption<any>>) => () => {
-      setActiveFilters(activeFilters.filter((af) => af.id !== chipToDelete.id));
-    };
+  const [filters, setFilters] = useState<FilterStates<FT>>(initFilters);
 
-  const updateFilter = (newFilter: ActiveFilter<any, FilterOption<any>>) => {
-    setActiveFilters(
-      activeFilters.map((af) => (af.id === newFilter.id ? newFilter : af))
+  useEffect(() => {
+    setProducts(
+      Object.entries(filters)
+        .map(([id, p]) => filterTypes[id].processor(p ?? []))
+        .filter((x) => !!x)
     );
-  };
+    setFilterState?.(filters);
+  }, [JSON.stringify(filters)]);
 
-  useEffect(() => onActiveFiltersChange(activeFilters), [activeFilters]);
+  useEffect(() => {
+    setFilters(initFilters);
+  }, [JSON.stringify(initFilters)]);
 
   return (
     <Paper
@@ -87,75 +74,70 @@ export function FilterBar(props: FilterBarProps): ReactElement {
       alignItems="center"
       gap={1}
       flexWrap="wrap"
-      sx={{
-        py: 0.5,
-        px: 1,
-        ...sx,
-      }}
+      sx={{ py: 0.5, px: 1, mb: "1rem" }}
     >
       <Typography variant="body2">Filters:</Typography>
-      {activeFilters.length === 0 && (
+      {Object.keys(filters).length === 0 && (
         <Typography variant="body2" color="grey" fontStyle="italic">
           None
         </Typography>
       )}
-      {activeFilters.map((af) => (
-        <FilterChip<any, FilterOption<any>>
-          key={af.id}
-          activeFilter={af}
-          setActiveFilter={updateFilter}
-          handleDelete={handleDelete}
-          activeColor={activeChipColor}
-        />
-      ))}
 
-      <HoverHelp description="Add a filter">
+      {Object.entries(filters).map(([k, filter]) => {
+        const f = filterTypes[k];
+        if (!f) return null;
+        if (!filter) return null;
+        return (
+          <f.FilterChip
+            value={filter}
+            filterType={f}
+            setValue={(value) => setFilters({ ...filters, [k]: value })}
+            remove={() => {
+              const copy = { ...filters };
+              delete copy[k];
+              setFilters(copy);
+            }}
+            key={k}
+          />
+        );
+      })}
+
+      <Tooltip title="Add a filter">
         <IconButton
           size="small"
           sx={{ ml: "auto" }}
           id="add-filter-button"
-          aria-controls={open ? "add-filter" : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? "true" : undefined}
-          onClick={handleClick}
+          onClick={(event) => setAnchorEl(event.currentTarget)}
         >
           <Add />
         </IconButton>
-      </HoverHelp>
+      </Tooltip>
 
       <Menu
         id="add-filter-menu"
         anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{ "aria-labelledby": "add-filter-button" }}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+        sx={{ maxHeight: "32rem" }}
       >
-        {Object.values(filterOptions)
-          .flat()
-          .map((filterOption) => (
+        {Object.entries(filterTypes).map(([id, ft]) => {
+          if (ft.availability === "hidden") return null;
+          return (
             <MenuItem
-              key={filterOption.name}
-              disabled={activeFilters.some(
-                (af) => af.filterOption.name === filterOption.name
-              )}
+              key={id}
+              disabled={
+                filters[id] !== null || ft.availability === "disabled-inactive"
+              }
               onClick={() => {
-                setActiveFilters([
-                  ...activeFilters,
-                  {
-                    id: crypto.randomUUID(),
-                    value:
-                      filterOption.defaultValue ??
-                      filterOptionInitialValues[filterOption.type],
-                    filterOption,
-                  },
-                ]);
-                handleClose();
+                setFilters((prev) => ({ ...prev, [id]: [] }));
+                setAnchorEl(null);
               }}
             >
-              {filterOption.name}
+              {ft.menuLabel}
             </MenuItem>
-          ))}
+          );
+        })}
       </Menu>
     </Paper>
   );
-}
+};

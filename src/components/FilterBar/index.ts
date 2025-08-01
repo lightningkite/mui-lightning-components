@@ -1,2 +1,3 @@
 export * from "./FilterBar";
-export * from "./filterTypes";
+export * from "./filterUtils";
+export * from "./multiselectFilter";

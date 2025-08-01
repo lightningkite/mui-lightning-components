@@ -59,7 +59,7 @@ export interface RestDataTableProps<T extends HasId, A extends HasId = T> {
   defaultSorting?: GridSortModel;
   multiselectActions?: DataTableSelectAction[];
   defaultPageSize?: number;
-  dataGridProps: Partial<DataGridProps<T>>;
+  dataGridProps?: Partial<DataGridProps<T>>;
 }
 
 export function RestDataTable<T extends HasId, A extends HasId>(
