@@ -114,7 +114,7 @@ export function RestDataTable<T extends HasId>(
   const queryCondition: Condition<T> = useMemo(() => {
     const conditions = makeQueryConditions(state, props);
     return conditions.length > 0 ? { And: conditions } : { Always: true };
-  }, [dateRangeFilter, gridFilterModel, dependencies]);
+  }, [dateRangeFilter, gridFilterModel, dependencies, additionalQueryConditions]);
 
   useEffect(() => dispatch({ type: "forceReload" }), dependencies);
 

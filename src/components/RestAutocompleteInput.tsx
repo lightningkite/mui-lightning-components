@@ -7,6 +7,7 @@ import {
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
 import { ReactElement, useEffect, useRef, useState } from "react";
 import { makeSearchConditions } from "utils/miscHelpers";
+import { useThrottle } from "utils/useThrottle";
 
 export type RestAutocompleteValue<T, Multiple> = Multiple extends
   | undefined
@@ -125,6 +126,7 @@ export function RestAutocompleteInput<
   }, [
     throttledInputText,
     restEndpoint,
+    additionalQueryConditions,
     ...dependencies,
     ...(Array.isArray(value) ? [value.length] : []),
   ]);
@@ -170,25 +172,4 @@ export function RestAutocompleteInput<
       )}
     />
   );
-}
-
-function useThrottle<T>(value: T, interval = 500): T {
-  const [throttledValue, setThrottledValue] = useState<T>(value);
-  const lastExecuted = useRef<number>(Date.now());
-
-  useEffect(() => {
-    if (Date.now() >= lastExecuted.current + interval) {
-      lastExecuted.current = Date.now();
-      setThrottledValue(value);
-    } else {
-      const timerId = setTimeout(() => {
-        lastExecuted.current = Date.now();
-        setThrottledValue(value);
-      }, interval);
-
-      return () => clearTimeout(timerId);
-    }
-  }, [value, interval]);
-
-  return throttledValue;
 }
