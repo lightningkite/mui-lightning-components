@@ -1,12 +1,5 @@
-import {
-  Condition,
-  HasId,
-  Query,
-  RestEndpoint,
-} from "@lightningkite/lightning-server-simplified";
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
-import { ReactElement, useEffect, useRef, useState } from "react";
-import { makeSearchConditions } from "utils/miscHelpers";
+import { DependencyList, ReactElement, useEffect, useState } from "react";
 import { useThrottle } from "utils/useThrottle";
 
 export type RestAutocompleteValue<T, Multiple> = Multiple extends
@@ -16,23 +9,18 @@ export type RestAutocompleteValue<T, Multiple> = Multiple extends
   : T[];
 
 export interface RestAutocompleteInputProps<
-  T extends HasId,
+  T,
   Multiple extends boolean | undefined
 > {
   /** The model rest endpoint to fetch options from */
-  restEndpoint: RestEndpoint<T>;
+  itemGetter: (searchText: string) => Promise<T[]>;
   /** True to allow the user to select multiple options */
   multiple?: Multiple;
-  /** Additional conditions to filter the values when requested from the endpoint */
-  additionalQueryConditions?: Condition<T>[];
   /** Function to return the label (displayed option) for an item */
   getOptionLabel: (option: T) => string;
+  getOptionId: (option: T) => string;
   /** Given an item, return true if it should be disabled */
   getOptionDisabled?: (option: T) => boolean;
-  /** Non-nullable properties to search */
-  searchProperties: (keyof T)[];
-  /** Nullable properties to search */
-  nullableSearchProperties?: (keyof T)[];
   /** Field label */
   label?: string;
   /** Field placeholder */
@@ -41,8 +29,6 @@ export interface RestAutocompleteInputProps<
   value: RestAutocompleteValue<T, Multiple>;
   /** Called when the selected item(s) change */
   onChange: (value: RestAutocompleteValue<T, Multiple>) => void;
-  /** True if the field is invalid */
-  error?: boolean;
   /** Field helper text */
   helperText?: string;
   /** True to force showing the field in a loading state */
@@ -50,12 +36,7 @@ export interface RestAutocompleteInputProps<
   /** True to disable the field */
   disabled?: boolean;
   /** When any dependencies change, options will be re-fetched from the endpoint */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dependencies?: any[];
-  /** The maximum number of items to fetch at one time from the endpoint */
-  maxFetchLimit?: number;
-  /** The order to sort the results by */
-  orderBy?: Query<T>["orderBy"];
+  dependencies?: DependencyList;
 }
 
 /**
@@ -64,27 +45,22 @@ export interface RestAutocompleteInputProps<
  * as the user types.
  */
 export function RestAutocompleteInput<
-  T extends HasId,
+  T,
   Multiple extends boolean | undefined = undefined
 >(props: RestAutocompleteInputProps<T, Multiple>): ReactElement {
   const {
-    restEndpoint,
+    itemGetter,
     multiple = undefined,
     getOptionLabel,
+    getOptionId,
     getOptionDisabled,
     label,
     placeholder = "Type to search...",
-    searchProperties,
-    nullableSearchProperties,
     value,
     onChange,
-    error,
     helperText,
-    additionalQueryConditions,
     disabled,
     dependencies = [],
-    maxFetchLimit = 100,
-    orderBy = [],
   } = props;
 
   const [inputText, setInputText] = useState("");
@@ -98,35 +74,12 @@ export function RestAutocompleteInput<
 
   useEffect(() => {
     setFetching(true);
-    const conditions = [...(additionalQueryConditions ?? [])];
-
-    if (multiple || !value || inputText !== getOptionLabel(value as T)) {
-      conditions.push(
-        ...makeSearchConditions(
-          throttledInputText.split(" "),
-          searchProperties,
-          nullableSearchProperties
-        )
-      );
-    }
-
-    if (multiple && Array.isArray(value)) {
-      const alreadySelected = value.map((v) => v._id);
-      conditions.push({ _id: { NotInside: alreadySelected } });
-    }
-
-    restEndpoint
-      .query({
-        condition: conditions.length ? { And: conditions } : { Always: true },
-        limit: maxFetchLimit,
-        orderBy,
-      })
+    itemGetter(throttledInputText)
       .then(setOptions)
       .finally(() => setFetching(false));
   }, [
     throttledInputText,
-    restEndpoint,
-    additionalQueryConditions,
+    itemGetter,
     ...dependencies,
     ...(Array.isArray(value) ? [value.length] : []),
   ]);
@@ -138,7 +91,9 @@ export function RestAutocompleteInput<
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
-      isOptionEqualToValue={(option, value) => option._id === value._id}
+      isOptionEqualToValue={(option, value) =>
+        getOptionId(option) === getOptionId(value)
+      }
       getOptionLabel={getOptionLabel}
       getOptionDisabled={getOptionDisabled}
       filterOptions={(x) => x}
@@ -152,21 +107,22 @@ export function RestAutocompleteInput<
       onInputChange={(_e, value) => setInputText(value)}
       renderInput={(params) => (
         <TextField
-          error={error}
           helperText={helperText}
           {...params}
           label={label}
           placeholder={placeholder}
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {loading ? (
-                  <CircularProgress color="inherit" size={20} />
-                ) : null}
-                {params.InputProps.endAdornment}
-              </>
-            ),
+          slotProps={{
+            input: {
+              ...params.InputProps,
+              endAdornment: (
+                <>
+                  {loading ? (
+                    <CircularProgress color="inherit" size={20} />
+                  ) : null}
+                  {params.InputProps.endAdornment}
+                </>
+              ),
+            },
           }}
         />
       )}

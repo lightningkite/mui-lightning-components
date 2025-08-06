@@ -8,56 +8,48 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { FilterType, FilterTypeProcessor, FilterStates } from "./filterUtils";
 
-export type FilterChipProps<V, P> = {
-  value: V[];
-  setValue: (v: V[]) => void;
-  remove: () => void;
-  filterType: FilterType<V, P>;
-};
-
-export type FilterType<V = any, P = any> = {
-  processor: (v: V[]) => P;
-  FilterChip: FC<FilterChipProps<V, P>>;
-  menuLabel: string;
-  state: V[] | null;
-  availability?: "hidden" | "disabled-inactive" | "available";
-};
-
-type ValueOf<FT extends FilterType> = Parameters<FT["processor"]>[0];
-type ProcessorOf<FT extends FilterType> = ReturnType<FT["processor"]>;
-
-type FilterStates<FT extends Record<string, FilterType>> = {
-  [K in keyof FT]: ValueOf<FT[K]> | null;
-};
-
-export const FilterBar = <FT extends Record<string, FilterType>>(props: {
+export type FilterBarProps<FT extends Record<string, FilterType>> = {
   filterTypes: FT;
   setProducts: (
-    products: { [K in keyof FT]: ProcessorOf<FT[K]> }[keyof FT][]
+    products: {
+      [K in keyof FT]: FilterTypeProcessor<FT[K]>;
+    }[keyof FT][]
   ) => void;
+  filterState?: FilterStates<FT>;
   setFilterState?: (filters: FilterStates<FT>) => void;
-}): React.ReactNode => {
-  const { filterTypes, setProducts, setFilterState } = props;
+};
+
+export const FilterBar = <FT extends Record<string, FilterType>>(
+  props: FilterBarProps<FT>
+): React.ReactNode => {
+  const { filterTypes, setProducts, filterState, setFilterState } = props;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const initFilters = useMemo(
-    () =>
-      Object.keys(filterTypes).reduce((acc, k) => {
-        const curr = filterTypes[k];
-        (acc as any)[k] = curr?.state ?? null;
+  const initFilters = useMemo(() => {
+    if (filterState) {
+      return Object.entries(filterState).reduce((acc, [k, v]) => {
+        (acc as any)[k] = v;
         return acc;
-      }, {} as FilterStates<FT>),
-    [filterTypes]
-  );
+      }, {} as FilterStates<FT>);
+    }
+    return Object.keys(filterTypes).reduce((acc, k) => {
+      (acc as any)[k] = null;
+      return acc;
+    }, {} as FilterStates<FT>);
+  }, [filterState]);
 
   const [filters, setFilters] = useState<FilterStates<FT>>(initFilters);
 
   useEffect(() => {
     setProducts(
       Object.entries(filters)
-        .map(([id, p]) => filterTypes[id].processor(p ?? []))
+        .map(([id, p]) => {
+          if (p) return filterTypes[id].processor(p ?? []);
+          else return null;
+        })
         .filter((x) => !!x)
     );
     setFilterState?.(filters);
@@ -83,14 +75,15 @@ export const FilterBar = <FT extends Record<string, FilterType>>(props: {
         </Typography>
       )}
 
-      {Object.entries(filters).map(([k, filter]) => {
-        const f = filterTypes[k];
-        if (!f) return null;
-        if (!filter) return null;
+      {Object.entries(filters).map(([k, filterValue]) => {
+        const filterType = filterTypes[k];
+
+        if (!filterType) return null;
+        if (!filterValue) return null;
         return (
-          <f.FilterChip
-            value={filter}
-            filterType={f}
+          <filterType.FilterChip
+            value={filterValue}
+            filterType={filterType}
             setValue={(value) => setFilters({ ...filters, [k]: value })}
             remove={() => {
               const copy = { ...filters };
@@ -126,7 +119,8 @@ export const FilterBar = <FT extends Record<string, FilterType>>(props: {
             <MenuItem
               key={id}
               disabled={
-                filters[id] !== null || ft.availability === "disabled-inactive"
+                (filters[id] && filters[id] !== null) ||
+                ft.availability === "disabled-inactive"
               }
               onClick={() => {
                 setFilters((prev) => ({ ...prev, [id]: [] }));
