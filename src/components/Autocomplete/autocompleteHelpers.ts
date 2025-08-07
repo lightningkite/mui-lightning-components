@@ -53,20 +53,18 @@ interface FromQueryBaseParams<I extends HasId> {
 type GetOptions<T> = (searchText: string) => Promise<T[]>;
 
 export function getOptionsFromQuery<I extends HasId, Out = I>(
-  params: FromQueryBaseParams<I> & {
-    then: (items: I[]) => Promise<Out[]>;
-  }
+  params: FromQueryBaseParams<I> & { then: (items: I[]) => Promise<Out[]> }
 ): GetOptions<Out>;
 
 export function getOptionsFromQuery<I extends HasId>(
   params: FromQueryBaseParams<I>
 ): GetOptions<I>;
 
-export function getOptionsFromQuery<I extends HasId>(
+export function getOptionsFromQuery<I extends HasId, Out = I>(
   params: FromQueryBaseParams<I> & {
-    then?: (items: I[]) => Promise<any[]>;
+    then?: (items: I[]) => Promise<Out[]>;
   }
-): GetOptions<I> {
+): GetOptions<Out> {
   return (input) => {
     return params
       .getOptions({
@@ -79,10 +77,10 @@ export function getOptionsFromQuery<I extends HasId>(
         orderBy: params.orderBy,
         limit: params.limit,
       })
-      .then((res) => {
+      .then(async (res) => {
         if (params.then) {
           return params.then(res);
-        } else return res;
+        } else return res as unknown as Out[];
       });
   };
 }

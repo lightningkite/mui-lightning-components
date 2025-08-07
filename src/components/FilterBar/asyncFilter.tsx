@@ -8,7 +8,7 @@ import {
 import { Stack } from "@mui/material";
 
 export type AsyncMultiSelectFilterChip<V> = {
-  itemGetter: RestAutocompleteInputProps<V, any>["itemGetter"];
+  itemGetter: (searchText: string) => Promise<V[]>;
   optionToId: (v: V) => string;
   getOptionLabel: (value: V) => string;
   displayValues?: (v: V[]) => string;
