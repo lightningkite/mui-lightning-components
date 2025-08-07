@@ -2,7 +2,6 @@ import { Add } from "@mui/icons-material";
 import {
   IconButton,
   Menu,
-  MenuItem,
   Paper,
   Stack,
   Tooltip,
@@ -12,13 +11,17 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FilterType, FilterTypeProcessor, FilterStates } from "./filterUtils";
 
 export type FilterBarProps<FT extends Record<string, FilterType>> = {
+  /* A definition of the filters included in the filter bar. Use `createFilter` or `createBasicFilter` to create filters */
   filterTypes: FT;
+  /* Setter for the products when filters are added/removed/changed */
   setProducts: (
     products: {
       [K in keyof FT]: FilterTypeProcessor<FT[K]>;
     }[keyof FT][]
   ) => void;
+  /* Optional controlled state of filters */
   filterState?: FilterStates<FT>;
+  /* Sets the state of filters when they change */
   setFilterState?: (filters: FilterStates<FT>) => void;
 };
 
@@ -41,22 +44,28 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
     }, {} as FilterStates<FT>);
   }, [filterState]);
 
-  const [filters, setFilters] = useState<FilterStates<FT>>(initFilters);
+  const [internalFilterState, setInternalFilterState] =
+    useState<FilterStates<FT>>(initFilters);
+
+  const actualFilters: FilterStates<FT> = useMemo(() => {
+    if (filterState) return filterState;
+    else return internalFilterState;
+  }, [internalFilterState, filterState]);
 
   useEffect(() => {
     setProducts(
-      Object.entries(filters)
+      Object.entries(actualFilters)
         .map(([id, p]) => {
           if (p) return filterTypes[id].processor(p ?? []);
           else return null;
         })
         .filter((x) => !!x)
     );
-    setFilterState?.(filters);
-  }, [JSON.stringify(filters)]);
+    setFilterState?.(internalFilterState);
+  }, [JSON.stringify(internalFilterState)]);
 
   useEffect(() => {
-    setFilters(initFilters);
+    setInternalFilterState(initFilters);
   }, [JSON.stringify(initFilters)]);
 
   return (
@@ -69,13 +78,13 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
       sx={{ py: 0.5, px: 1, mb: "1rem" }}
     >
       <Typography variant="body2">Filters:</Typography>
-      {Object.keys(filters).length === 0 && (
+      {Object.keys(actualFilters).length === 0 && (
         <Typography variant="body2" color="grey" fontStyle="italic">
           None
         </Typography>
       )}
 
-      {Object.entries(filters).map(([k, filterValue]) => {
+      {Object.entries(actualFilters).map(([k, filterValue]) => {
         const filterType = filterTypes[k];
 
         if (!filterType) return null;
@@ -84,11 +93,13 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
           <filterType.FilterChip
             value={filterValue}
             filterType={filterType}
-            setValue={(value) => setFilters({ ...filters, [k]: value })}
+            setValue={(value) =>
+              setInternalFilterState({ ...actualFilters, [k]: value })
+            }
             remove={() => {
-              const copy = { ...filters };
+              const copy = { ...actualFilters };
               delete copy[k];
-              setFilters(copy);
+              setInternalFilterState(copy);
             }}
             key={k}
           />
@@ -113,24 +124,19 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
         onClose={() => setAnchorEl(null)}
         sx={{ maxHeight: "32rem" }}
       >
-        {Object.entries(filterTypes).map(([id, ft]) => {
-          if (ft.availability === "hidden") return null;
-          return (
-            <MenuItem
-              key={id}
-              disabled={
-                (filters[id] && filters[id] !== null) ||
-                ft.availability === "disabled-inactive"
-              }
-              onClick={() => {
-                setFilters((prev) => ({ ...prev, [id]: [] }));
+        {Object.entries(filterTypes).map(([id, ft]) => (
+          <ft.MenuItem
+            key={id}
+            filterType={ft}
+            menuProps={{
+              disabled: !!(actualFilters[id] && actualFilters[id] !== null),
+              onClick: () => {
+                setInternalFilterState((prev) => ({ ...prev, [id]: [] }));
                 setAnchorEl(null);
-              }}
-            >
-              {ft.menuLabel}
-            </MenuItem>
-          );
-        })}
+              },
+            }}
+          />
+        ))}
       </Menu>
     </Paper>
   );

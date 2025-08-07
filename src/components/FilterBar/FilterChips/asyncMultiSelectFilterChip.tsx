@@ -1,6 +1,6 @@
 import { FC } from "react";
-import { FilterChipProps, genericFilterLabel } from "./filterUtils";
-import { PopoverWrapper } from "./PopoverWrapper";
+import { FilterChipProps, genericFilterLabel } from "../filterUtils";
+import { FilterChipPopoverWrapper } from "./FilterChipPopoverWrapper";
 import {
   RestAutocompleteInput,
   RestAutocompleteInputProps,
@@ -31,7 +31,7 @@ export const createAsyncMultiSelectFilterChip = <V, P>(
     const { value, setValue } = innerProps;
 
     return (
-      <PopoverWrapper
+      <FilterChipPopoverWrapper
         {...innerProps}
         displayValues={(value) =>
           value.length > 0
@@ -49,7 +49,7 @@ export const createAsyncMultiSelectFilterChip = <V, P>(
             getOptionId={optionToId}
           />
         </Stack>
-      </PopoverWrapper>
+      </FilterChipPopoverWrapper>
     );
   };
 };

@@ -11,8 +11,8 @@ import {
 } from "@mui/material";
 import { ArrowDropDownIcon } from "@mui/x-date-pickers";
 import { FC, PropsWithChildren, useState } from "react";
-import { FilterChipProps, genericFilterLabel } from "./filterUtils";
-import { PopoverWrapper } from "./PopoverWrapper";
+import { FilterChipProps, genericFilterLabel } from "../filterUtils";
+import { FilterChipPopoverWrapper } from "./FilterChipPopoverWrapper";
 
 export type SelectFilterChipProps<V> = {
   options: V[];
@@ -36,7 +36,7 @@ export const createMultiSelectFilterChip = <V, P>(
     } = props;
 
     return (
-      <PopoverWrapper
+      <FilterChipPopoverWrapper
         {...innerProps}
         displayValues={(value) =>
           value.length > 0
@@ -75,7 +75,7 @@ export const createMultiSelectFilterChip = <V, P>(
             );
           })}
         </MenuList>
-      </PopoverWrapper>
+      </FilterChipPopoverWrapper>
     );
   };
 };
@@ -95,7 +95,7 @@ export const createSingleSelectFilterChip = <V, P>(
     } = props;
 
     return (
-      <PopoverWrapper
+      <FilterChipPopoverWrapper
         {...innerProps}
         displayValues={(value) =>
           value.length > 0
@@ -132,7 +132,7 @@ export const createSingleSelectFilterChip = <V, P>(
             );
           })}
         </MenuList>
-      </PopoverWrapper>
+      </FilterChipPopoverWrapper>
     );
   };
 };
