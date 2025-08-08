@@ -1,6 +1,6 @@
 {
   "name": "@lightningkite/mui-lightning-components",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "MUI based React components to use in projects with a Lightning Server backend",
   "repository": {
     "type": "git",
@@ -22,20 +22,21 @@
   "author": "Troy DeSpain",
   "license": "ISC",
   "peerDependencies": {
-    "@emotion/react": "^11.11.1",
+    "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@lightningkite/lightning-server-simplified": "^1.1.1",
     "@mui/icons-material": "^7.2.0",
+    "@mui/lab": "7.0.0-beta.14",
     "@mui/material": "^7.2.0",
     "@mui/x-data-grid": "^8.9.0",
-    "@mui/x-date-pickers": ">=6.10.0",
-    "dayjs": ">=1.11.9",
-    "formik": ">=2.4.2",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "@mui/x-date-pickers": "^8.9.0",
+    "dayjs": "^1.11.9",
+    "formik": "^2.4.2",
+    "react": ">=18.0.0 <20.0.0",
+    "react-dom": ">=18.0.0 <20.0.0"
   },
   "dependencies": {
-    "@mui/lab": "7.0.0-beta.14"
+    "tslib": "^2.6.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.1.0",
@@ -47,7 +48,6 @@
     "rollup": "^3.26.3",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-typescript2": "^0.35.0",
-    "tslib": "^2.6.0",
     "typescript": "^5.8.3"
   }
 }

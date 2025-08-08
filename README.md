@@ -10,20 +10,16 @@ A paginated table that fetches rows asynchronously from a REST endpoint. For inf
 
 ```tsx
 <RestDataTable
-  restEndpoint={session.user}
+  getRows={getRowsFromEndpoint({
+    endpoint: api.user,
+    condition: {And: filter}
+  })}
   onRowClick={(user) => navigate(`/users/${user._id}`)}
   searchFields={["name", "email"]}
+  dependencies={[refreshTrigger, filter]}
   columns={[
-    { field: "name", headerName: "User Name", flex: 1 },
-    { field: "email", headerName: "Email", flex: 1 },
-    {
-      field: "modifiedAt",
-      headerName: "Last Modified",
-      width: 120,
-      type: "date",
-      valueGetter: ({ value }) => new Date(value),
-      valueFormatter: ({ value }) => value.toLocaleDateString(),
-    },
+    {field: "name", headerName: "User Name", flex: 1},
+    {field: "email", headerName: "Email", flex: 1}
   ]}
 />
 ```
@@ -37,18 +33,11 @@ A component for selecting either one or multiple values from a REST endpoint. Th
   {...makeFormikAutocompleteProps(formik, "multipleUsers")}
   multiple
   label="Select multiple users"
-  restEndpoint={session.user}
-  getOptionLabel={(user) => `${user.name}`}
-  searchProperties={["name"]}
+  itemGetter={getOptionsFromQuery({
+    getOptions: api.user.query,
+    searchFields: ["name", "email"]
+  })}
+  getOptionLabel={(user) => user.name}
+  getOptionId={(user) => user._id}
 />
-```
-
-## Hover Help
-
-A component for displaying help text on hover. The component uses the [Tooltip](https://mui.com/components/tooltips/) component from MUI.
-
-```tsx
-<HoverHelp description="Delete this user">
-  <Button color="error">Delete</Button>
-</HoverHelp>
 ```
