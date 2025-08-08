@@ -7,108 +7,17 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, {
-  DependencyList,
-  FC,
-  ReactNode,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { FilterType, FilterTypeProcessor, FilterStates } from "./filterUtils";
+import React, { useState } from "react";
+import { FilterDef } from "./types";
+import { FilterBarState, useFilterBarState } from "./useFilterBar";
 
-export type FilterBarProps<FT extends Record<string, FilterType>> = {
-  /* A definition of the filters included in the filter bar. Use `createFilter` or `createBasicFilter` to create filters */
-  filterTypes: FT;
-  /* Setter for the products when filters are added/removed/changed */
-  setProducts: (
-    products: {
-      [K in keyof FT]: FilterTypeProcessor<FT[K]>;
-    }[keyof FT][]
-  ) => void;
-  /* Optional controlled state of filters */
-  filterState?: FilterStates<FT>;
-  /* Sets the state of filters when they change */
-  setFilterState?: (filters: FilterStates<FT>) => void;
-  /* Dependencies for when the Filter Type definition changes (the 'filterTypes' prop) */
-  dependencies?: DependencyList;
+export type FilterBarProps<FT extends Record<string, FilterDef>> =
+  FilterBarState<FT>;
 
-  RenderFilterBar?: FC<FilterRendererProps<FT>>;
-};
-
-export const FilterBar = <FT extends Record<string, FilterType>>(
+export const FilterBar = <FT extends Record<string, FilterDef>>(
   props: FilterBarProps<FT>
 ): React.ReactNode => {
-  const {
-    filterTypes: unMemoizedFilterTypes,
-    setProducts,
-    filterState: externalFilterState,
-    setFilterState,
-    dependencies,
-    RenderFilterBar = BasicRenderer,
-  } = props;
-
-  const filterTypes = useMemo(
-    () => unMemoizedFilterTypes,
-    [JSON.stringify(dependencies)]
-  );
-
-  const initFilters = useMemo(() => {
-    if (externalFilterState) {
-      return Object.entries(externalFilterState).reduce((acc, [k, v]) => {
-        (acc as any)[k] = v;
-        return acc;
-      }, {} as FilterStates<FT>);
-    }
-    return Object.keys(filterTypes).reduce((acc, k) => {
-      (acc as any)[k] = null;
-      return acc;
-    }, {} as FilterStates<FT>);
-  }, [externalFilterState]);
-
-  const [internalFilterState, setInternalFilterState] =
-    useState<FilterStates<FT>>(initFilters);
-
-  const filterState: FilterStates<FT> = useMemo(() => {
-    if (externalFilterState) return externalFilterState;
-    else return internalFilterState;
-  }, [internalFilterState, externalFilterState]);
-
-  useEffect(() => {
-    setProducts(
-      Object.entries(filterState)
-        .map(([id, p]) => {
-          if (p) return filterTypes[id].processor(p ?? []);
-          else return null;
-        })
-        .filter((x) => !!x)
-    );
-    setFilterState?.(internalFilterState);
-  }, [JSON.stringify(internalFilterState)]);
-
-  useEffect(() => {
-    setInternalFilterState(initFilters);
-  }, [JSON.stringify(initFilters)]);
-
-  return (
-    <RenderFilterBar
-      filterState={filterState}
-      setFilterState={setInternalFilterState}
-      filterTypes={filterTypes}
-    />
-  );
-};
-
-type FilterRendererProps<FT extends Record<string, FilterType>> = {
-  filterState: FilterStates<FT>;
-  setFilterState: (newState: FilterStates<FT>) => void;
-  filterTypes: FT;
-};
-
-function BasicRenderer<FT extends Record<string, FilterType>>(
-  props: FilterRendererProps<FT>
-) {
-  const { filterState, filterTypes, setFilterState } = props;
+  const { filterState, filterTypes, setFilterState } = useFilterBarState(props);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -138,7 +47,7 @@ function BasicRenderer<FT extends Record<string, FilterType>>(
             value={filterValue}
             filterType={filterType}
             setValue={(value) => setFilterState({ ...filterState, [k]: value })}
-            remove={() => {
+            removeFromBar={() => {
               const copy = { ...filterState };
               delete copy[k];
               setFilterState(copy);
@@ -182,4 +91,4 @@ function BasicRenderer<FT extends Record<string, FilterType>>(
       </Menu>
     </Paper>
   );
-}
+};

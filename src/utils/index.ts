@@ -3,3 +3,4 @@ export * from "./miscHelpers";
 export * from "./persistentState";
 export * from "./useThrottle";
 export * from "./useActiveEffect";
+export * from "./types";

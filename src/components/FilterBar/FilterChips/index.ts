@@ -1,2 +1,3 @@
-export * from "./FilterChipPopoverWrapper"
-export * from "./filterChip"
+export * from "./FilterChipPopoverWrapper";
+export * from "./AsyncMultiSelectFilterChip";
+export * from "./SelectFilterChip";

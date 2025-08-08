@@ -1,35 +1,35 @@
 import { useState } from "react";
 import { usePersistentState } from "../../utils";
-import { FilterStates, FilterType } from "./filterUtils";
+import { FilterState, FilterDef } from "./types";
 
-export const useFilterBar = <T extends Record<string, FilterType>>(
-  filterTypes: T,
-  initState?: FilterStates<T>
+export const useFilterBar = <T extends Record<string, FilterDef>>(
+  filterDefs: T,
+  initState?: FilterState<T>
 ) => {
-  const [filterState, setFilterState] = useState<FilterStates<T>>(
+  const [filterState, setFilterState] = useState<FilterState<T>>(
     initState ??
-      Object.keys(filterTypes).reduce((acc, key) => {
+      Object.keys(filterDefs).reduce((acc, key) => {
         (acc as any)[key] = null;
         return acc;
       }, {} as any)
   );
 
-  return { filterTypes: filterTypes, filterState, setFilterState };
+  return { filterDefs: filterDefs, filterState, setFilterState };
 };
 
-export const useFilterBarSaveLocally = <T extends Record<string, FilterType>>(
-  filterTypes: T,
-  initState?: FilterStates<T>,
+export const useFilterBarSaveLocally = <T extends Record<string, FilterDef>>(
+  filterDefs: T,
+  initState?: FilterState<T>,
   localStorageKey?: string
 ) => {
-  const [filterState, setFilterState] = usePersistentState<FilterStates<T>>(
-    localStorageKey ?? JSON.stringify(filterTypes),
+  const [filterState, setFilterState] = usePersistentState<FilterState<T>>(
+    localStorageKey ?? JSON.stringify(filterDefs),
     initState ??
-      Object.keys(filterTypes).reduce((acc, key) => {
+      Object.keys(filterDefs).reduce((acc, key) => {
         (acc as any)[key] = null;
         return acc;
-      }, {} as FilterStates<T>)
+      }, {} as FilterState<T>)
   );
 
-  return { filterTypes: filterTypes, filterState, setFilterState };
+  return { filterDefs: filterDefs, filterState, setFilterState };
 };

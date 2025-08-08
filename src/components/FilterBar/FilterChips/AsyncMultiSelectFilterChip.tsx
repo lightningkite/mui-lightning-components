@@ -1,13 +1,11 @@
 import { FC } from "react";
-import { FilterChipProps, genericFilterLabel } from "../filterUtils";
+import { FilterChipProps } from "../types";
 import { FilterChipPopoverWrapper } from "./FilterChipPopoverWrapper";
-import {
-  RestAutocompleteInput,
-  RestAutocompleteInputProps,
-} from "components/Autocomplete/RestAutocompleteInput";
+import { RestAutocompleteInput } from "components/Autocomplete/RestAutocompleteInput";
 import { Stack } from "@mui/material";
+import { genericFilterLabel } from "../utils";
 
-export type AsyncMultiSelectFilterChip<V> = {
+export type AsyncMultiSelectFilterChipProps<V> = {
   itemGetter: (searchText: string) => Promise<V[]>;
   optionToId: (v: V) => string;
   getOptionLabel: (value: V) => string;
@@ -17,8 +15,8 @@ export type AsyncMultiSelectFilterChip<V> = {
 /**
  * Creates a filter chip that can have multiple values selected out of asynchronously fetched items
  */
-export const createAsyncMultiSelectFilterChip = <V, P>(
-  props: AsyncMultiSelectFilterChip<V>
+export const AsyncMultiSelectFilterChip = <V, P>(
+  props: AsyncMultiSelectFilterChipProps<V>
 ): FC<FilterChipProps<V, P>> => {
   return function Wrapper(innerProps: FilterChipProps<V, P>) {
     const {

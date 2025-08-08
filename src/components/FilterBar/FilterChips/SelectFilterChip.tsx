@@ -1,7 +1,8 @@
 import { MenuList, MenuItem } from "@mui/material";
 import { FC } from "react";
-import { FilterChipProps, genericFilterLabel } from "../filterUtils";
+import { FilterChipProps } from "../types";
 import { FilterChipPopoverWrapper } from "./FilterChipPopoverWrapper";
+import { genericFilterLabel } from "../utils";
 
 export type SelectFilterChipProps<V> = {
   options: V[];
@@ -13,7 +14,7 @@ export type SelectFilterChipProps<V> = {
 /**
  * Creates a filter chip that can have multiple values selected
  */
-export const createMultiSelectFilterChip = <V, P>(
+export const MultiSelectFilterChip = <V, P>(
   props: SelectFilterChipProps<V>
 ): FC<FilterChipProps<V, P>> => {
   return function Wrapper(innerProps: FilterChipProps<V, P>) {
@@ -72,7 +73,7 @@ export const createMultiSelectFilterChip = <V, P>(
 /**
  * Creates a filter chip that can have just a single value selected
  */
-export const createSingleSelectFilterChip = <V, P>(
+export const SingleSelectFilterChip = <V, P>(
   props: SelectFilterChipProps<V>
 ): FC<FilterChipProps<V, P>> => {
   return function Wrapper(innerProps: FilterChipProps<V, P>) {

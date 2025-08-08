@@ -7,8 +7,8 @@ import {
   Stack,
 } from "@mui/material";
 import { ArrowDropDownIcon } from "@mui/x-date-pickers";
-import { PropsWithChildren, useState } from "react";
-import { FilterChipProps } from "../filterUtils";
+import { PropsWithChildren, useMemo, useState } from "react";
+import { FilterChipProps } from "../types";
 import { Close } from "@mui/icons-material";
 
 export function FilterChipPopoverWrapper<V, P>(
@@ -16,10 +16,10 @@ export function FilterChipPopoverWrapper<V, P>(
     FilterChipProps<V, P> & { displayValues: (v: V[]) => string }
   >
 ) {
-  const { filterType, value, remove, displayValues, children } = props;
+  const { filterType, value, removeFromBar, displayValues, children } = props;
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-  const isActive = value.length > 0;
+  const isActive = useMemo(() => value.length > 0, [value]);
 
   return (
     <>
@@ -52,7 +52,7 @@ export function FilterChipPopoverWrapper<V, P>(
       >
         <Stack>
           <IconButton
-            onClick={() => remove()}
+            onClick={() => removeFromBar()}
             size="small"
             sx={{ alignSelf: "flex-end", mt: 1, mr: 1 }}
           >
