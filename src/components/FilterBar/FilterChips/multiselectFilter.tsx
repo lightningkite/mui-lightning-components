@@ -1,16 +1,5 @@
-import { Close } from "@mui/icons-material";
-import {
-  Tooltip,
-  Chip,
-  Typography,
-  Popover,
-  Stack,
-  IconButton,
-  MenuList,
-  MenuItem,
-} from "@mui/material";
-import { ArrowDropDownIcon } from "@mui/x-date-pickers";
-import { FC, PropsWithChildren, useState } from "react";
+import { MenuList, MenuItem } from "@mui/material";
+import { FC } from "react";
 import { FilterChipProps, genericFilterLabel } from "../filterUtils";
 import { FilterChipPopoverWrapper } from "./FilterChipPopoverWrapper";
 

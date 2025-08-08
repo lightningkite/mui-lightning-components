@@ -7,7 +7,14 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  DependencyList,
+  FC,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { FilterType, FilterTypeProcessor, FilterStates } from "./filterUtils";
 
 export type FilterBarProps<FT extends Record<string, FilterType>> = {
@@ -23,17 +30,32 @@ export type FilterBarProps<FT extends Record<string, FilterType>> = {
   filterState?: FilterStates<FT>;
   /* Sets the state of filters when they change */
   setFilterState?: (filters: FilterStates<FT>) => void;
+  /* Dependencies for when the Filter Type definition changes (the 'filterTypes' prop) */
+  dependencies?: DependencyList;
+
+  RenderFilterBar?: FC<FilterRendererProps<FT>>;
 };
 
 export const FilterBar = <FT extends Record<string, FilterType>>(
   props: FilterBarProps<FT>
 ): React.ReactNode => {
-  const { filterTypes, setProducts, filterState, setFilterState } = props;
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const {
+    filterTypes: unMemoizedFilterTypes,
+    setProducts,
+    filterState: externalFilterState,
+    setFilterState,
+    dependencies,
+    RenderFilterBar = BasicRenderer,
+  } = props;
+
+  const filterTypes = useMemo(
+    () => unMemoizedFilterTypes,
+    [JSON.stringify(dependencies)]
+  );
 
   const initFilters = useMemo(() => {
-    if (filterState) {
-      return Object.entries(filterState).reduce((acc, [k, v]) => {
+    if (externalFilterState) {
+      return Object.entries(externalFilterState).reduce((acc, [k, v]) => {
         (acc as any)[k] = v;
         return acc;
       }, {} as FilterStates<FT>);
@@ -42,19 +64,19 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
       (acc as any)[k] = null;
       return acc;
     }, {} as FilterStates<FT>);
-  }, [filterState]);
+  }, [externalFilterState]);
 
   const [internalFilterState, setInternalFilterState] =
     useState<FilterStates<FT>>(initFilters);
 
-  const actualFilters: FilterStates<FT> = useMemo(() => {
-    if (filterState) return filterState;
+  const filterState: FilterStates<FT> = useMemo(() => {
+    if (externalFilterState) return externalFilterState;
     else return internalFilterState;
-  }, [internalFilterState, filterState]);
+  }, [internalFilterState, externalFilterState]);
 
   useEffect(() => {
     setProducts(
-      Object.entries(actualFilters)
+      Object.entries(filterState)
         .map(([id, p]) => {
           if (p) return filterTypes[id].processor(p ?? []);
           else return null;
@@ -69,6 +91,28 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
   }, [JSON.stringify(initFilters)]);
 
   return (
+    <RenderFilterBar
+      filterState={filterState}
+      setFilterState={setInternalFilterState}
+      filterTypes={filterTypes}
+    />
+  );
+};
+
+type FilterRendererProps<FT extends Record<string, FilterType>> = {
+  filterState: FilterStates<FT>;
+  setFilterState: (newState: FilterStates<FT>) => void;
+  filterTypes: FT;
+};
+
+function BasicRenderer<FT extends Record<string, FilterType>>(
+  props: FilterRendererProps<FT>
+) {
+  const { filterState, filterTypes, setFilterState } = props;
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  return (
     <Paper
       component={Stack}
       direction="row"
@@ -78,13 +122,13 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
       sx={{ py: 0.5, px: 1, mb: "1rem" }}
     >
       <Typography variant="body2">Filters:</Typography>
-      {Object.keys(actualFilters).length === 0 && (
+      {Object.keys(filterState).length === 0 && (
         <Typography variant="body2" color="grey" fontStyle="italic">
           None
         </Typography>
       )}
 
-      {Object.entries(actualFilters).map(([k, filterValue]) => {
+      {Object.entries(filterState).map(([k, filterValue]) => {
         const filterType = filterTypes[k];
 
         if (!filterType) return null;
@@ -93,13 +137,11 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
           <filterType.FilterChip
             value={filterValue}
             filterType={filterType}
-            setValue={(value) =>
-              setInternalFilterState({ ...actualFilters, [k]: value })
-            }
+            setValue={(value) => setFilterState({ ...filterState, [k]: value })}
             remove={() => {
-              const copy = { ...actualFilters };
+              const copy = { ...filterState };
               delete copy[k];
-              setInternalFilterState(copy);
+              setFilterState(copy);
             }}
             key={k}
           />
@@ -129,9 +171,9 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
             key={id}
             filterType={ft}
             menuProps={{
-              disabled: !!(actualFilters[id] && actualFilters[id] !== null),
+              disabled: !!(filterState[id] && filterState[id] !== null),
               onClick: () => {
-                setInternalFilterState((prev) => ({ ...prev, [id]: [] }));
+                setFilterState({ ...filterState, [id]: [] });
                 setAnchorEl(null);
               },
             }}
@@ -140,4 +182,4 @@ export const FilterBar = <FT extends Record<string, FilterType>>(
       </Menu>
     </Paper>
   );
-};
+}
