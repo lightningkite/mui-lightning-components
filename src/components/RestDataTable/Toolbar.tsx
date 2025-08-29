@@ -1,4 +1,3 @@
-import { ArrowDropDown, Cancel, Close, Search } from "@mui/icons-material";
 import {
   Stack,
   Button,
@@ -20,6 +19,7 @@ import {
   ToolbarButton,
 } from "@mui/x-data-grid";
 import { FC, ReactElement, useState } from "react";
+import { ArrowDropDownIcon, CancelIcon, SearchIcon } from "utils/Icons";
 
 export interface DataTableSelectAction {
   label: string;
@@ -43,7 +43,7 @@ const RestDataTableToolbar: FC<GridToolbarProps & ToolbarProps> = (props) => {
       {!!selectionModel.ids.size && !!selectActions?.length && (
         <Button
           onClick={(e) => setActionsMenuAnchor(e.currentTarget)}
-          endIcon={<ArrowDropDown />}
+          endIcon={<ArrowDropDownIcon />}
           variant="outlined"
           sx={{ mr: 1 }}
         >
@@ -62,7 +62,7 @@ const RestDataTableToolbar: FC<GridToolbarProps & ToolbarProps> = (props) => {
                   color="default"
                   aria-disabled={state.expanded}
                 >
-                  <Search fontSize="small" />
+                  <SearchIcon fontSize="small" />
                 </StyledToolbarButton>
               </Tooltip>
             )}
@@ -80,7 +80,7 @@ const RestDataTableToolbar: FC<GridToolbarProps & ToolbarProps> = (props) => {
                   input: {
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search fontSize="small" />
+                        <SearchIcon fontSize="small" />
                       </InputAdornment>
                     ),
                     endAdornment: state.value ? (
@@ -91,7 +91,7 @@ const RestDataTableToolbar: FC<GridToolbarProps & ToolbarProps> = (props) => {
                           aria-label="Clear search"
                           material={{ sx: { marginRight: -0.75 } }}
                         >
-                          <Cancel fontSize="small" />
+                          <CancelIcon fontSize="small" />
                         </QuickFilterClear>
                       </InputAdornment>
                     ) : null,

@@ -1,4 +1,3 @@
-import { Add } from "@mui/icons-material";
 import {
   IconButton,
   Menu,
@@ -10,6 +9,7 @@ import {
 import React, { useState } from "react";
 import { FilterDef } from "./types";
 import { FilterBarState, useFilterBarState } from "./useFilterBar";
+import { AddIcon } from "utils/Icons";
 
 export type FilterBarProps<FT extends Record<string, FilterDef>> =
   FilterBarState<FT>;
@@ -64,7 +64,7 @@ export const FilterBar = <FT extends Record<string, FilterDef>>(
           id="add-filter-button"
           onClick={(event) => setAnchorEl(event.currentTarget)}
         >
-          <Add />
+          <AddIcon />
         </IconButton>
       </Tooltip>
 

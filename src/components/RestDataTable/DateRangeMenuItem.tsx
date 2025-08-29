@@ -1,4 +1,3 @@
-import { Remove } from "@mui/icons-material";
 import {
   Divider,
   ListItemButton,
@@ -12,7 +11,7 @@ import {
 } from "@mui/material";
 import { GridColDef } from "@mui/x-data-grid";
 import { DatePicker } from "@mui/x-date-pickers";
-import React, { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 export interface DateRangeFilter {
   field: string;
@@ -72,7 +71,7 @@ const DateRangeMenuItem: FC<DateRangeMenuItemProps> = (props) => {
             direction="row"
             spacing={1}
             alignItems="center"
-            divider={<Remove />}
+            divider={"-"}
             pt="1rem"
           >
             <DatePicker

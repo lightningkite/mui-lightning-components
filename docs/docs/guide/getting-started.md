@@ -15,7 +15,6 @@ MUI Lightning Components has the following peer dependencies; ensure they are al
 - @emotion/react
 - @emotion/styled
 - @lightningkite/lightning-server-simplified
-- @mui/icons-material
 - @mui/material
 - @mui/x-data-grid
 - @mui/x-date-pickers

@@ -9,7 +9,7 @@ import {
 import { ArrowDropDownIcon } from "@mui/x-date-pickers";
 import { PropsWithChildren, useMemo, useState } from "react";
 import { FilterChipProps } from "../types";
-import { Close } from "@mui/icons-material";
+import { CloseIcon } from "utils/Icons";
 
 export function FilterChipPopoverWrapper<V, P>(
   props: PropsWithChildren<
@@ -56,7 +56,7 @@ export function FilterChipPopoverWrapper<V, P>(
             size="small"
             sx={{ alignSelf: "flex-end", mt: 1, mr: 1 }}
           >
-            <Close fontSize={"small"} />
+            <CloseIcon fontSize={"small"} />
           </IconButton>
           {children}
         </Stack>

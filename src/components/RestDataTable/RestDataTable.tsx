@@ -51,7 +51,7 @@ export type GetRows<I extends HasId, R> = (params: GetRowsParams<I>) => {
 // For details on configuring the columns prop, see https://mui.com/x/react-data-grid/column-definition/#headers
 export interface RestDataTableProps<T extends HasId, A extends HasId = T> {
   getRows: GetRows<T, A>;
-  columns: GridColDef<T>[];
+  columns: GridColDef<A>[];
   onRowClick?: (item: T) => void;
   dependencies?: DependencyList;
   searchFields?: (keyof T)[];
@@ -59,7 +59,7 @@ export interface RestDataTableProps<T extends HasId, A extends HasId = T> {
   defaultSorting?: GridSortModel;
   multiselectActions?: DataTableSelectAction[];
   defaultPageSize?: number;
-  dataGridProps?: Partial<DataGridProps<T>>;
+  dataGridProps?: Partial<DataGridProps<A>>;
 }
 
 export function RestDataTable<T extends HasId, A extends HasId>(
@@ -78,7 +78,7 @@ export function RestDataTable<T extends HasId, A extends HasId>(
     dataGridProps,
   } = props;
 
-  const [state, dispatch] = useReducer(reducer<T>, {
+  const [state, dispatch] = useReducer(reducer<A>, {
     rows: { status: "loading" },
     gridFilterModel: { items: [] },
     pageSize: defaultPageSize,
@@ -146,7 +146,7 @@ export function RestDataTable<T extends HasId, A extends HasId>(
           if (getActive()) {
             dispatch({
               type: "setRows",
-              items: items as unknown as T[],
+              items: items as unknown as A[],
               totalItems,
             });
           }
@@ -157,7 +157,7 @@ export function RestDataTable<T extends HasId, A extends HasId>(
   );
 
   const processedColumns = useMemo(() => {
-    const temp: GridColDef<T>[] = columns.map((c) => ({
+    const temp: GridColDef<A>[] = columns.map((c) => ({
       ...c,
       disableColumnMenu: !(
         c.type === "date" ||
