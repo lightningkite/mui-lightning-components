@@ -26,7 +26,7 @@ export function FilterChipPopoverWrapper<V, P>(
       <Tooltip title={filterType.menuLabel}>
         <Chip
           icon={<ArrowDropDownIcon />}
-          color={isActive ? "primary" : "default"}
+          color={isActive ? "secondary" : "default"}
           label={
             <Typography
               variant="body2"

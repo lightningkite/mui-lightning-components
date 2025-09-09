@@ -10,6 +10,7 @@ export type AsyncMultiSelectFilterChipProps<V> = {
   optionToId: (v: V) => string;
   getOptionLabel: (value: V) => string;
   displayValues?: (v: V[]) => string;
+  label?: string;
 };
 
 /**
@@ -24,6 +25,7 @@ export const AsyncMultiSelectFilterChip = <V, P>(
       optionToId,
       displayValues = genericFilterLabel(getOptionLabel),
       itemGetter,
+      label
     } = props;
 
     const { value, setValue } = innerProps;
@@ -39,6 +41,7 @@ export const AsyncMultiSelectFilterChip = <V, P>(
       >
         <Stack width="20rem" padding={2}>
           <RestAutocompleteInput
+            label={label}
             itemGetter={itemGetter}
             getOptionLabel={getOptionLabel}
             value={value}
