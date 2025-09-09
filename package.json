@@ -1,6 +1,6 @@
 {
   "name": "@lightningkite/mui-lightning-components",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "MUI based React components to use in projects with a Lightning Server backend",
   "repository": {
     "type": "git",
