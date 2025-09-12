@@ -1,21 +1,6 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePersistentState } from "../../utils";
 import { FilterState, FilterDef } from "./types";
-
-export const useFilterBar = <T extends Record<string, FilterDef>>(
-  filterDefs: T,
-  initState?: FilterState<T>
-) => {
-  const [filterState, setFilterState] = useState<FilterState<T>>(
-    initState ??
-      Object.keys(filterDefs).reduce((acc, key) => {
-        (acc as any)[key] = null;
-        return acc;
-      }, {} as any)
-  );
-
-  return { filterDefs: filterDefs, filterState, setFilterState };
-};
 
 export const useFilterBarSaveLocally = <T extends Record<string, FilterDef>>(
   filterDefs: T,

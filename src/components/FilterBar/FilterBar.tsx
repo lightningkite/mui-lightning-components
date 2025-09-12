@@ -8,16 +8,29 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { FilterDef } from "./types";
-import { FilterBarState, useFilterBarState } from "./useFilterBar";
+import {
+  FilterBarStateUncontrolled,
+  useFilterBarStateUnControlled,
+  useFilterBarStateControlled,
+  FilterBarStateControlled,
+} from "./useFilterBar";
 import { AddIcon } from "utils/Icons";
 
-export type FilterBarProps<FT extends Record<string, FilterDef>> =
-  FilterBarState<FT>;
+export function FilterBar<FT extends Record<string, FilterDef>>(
+  props: FilterBarStateControlled<FT>
+): React.ReactNode;
 
-export const FilterBar = <FT extends Record<string, FilterDef>>(
-  props: FilterBarProps<FT>
-): React.ReactNode => {
-  const { filterState, filterTypes, setFilterState } = useFilterBarState(props);
+export function FilterBar<FT extends Record<string, FilterDef>>(
+  props: FilterBarStateUncontrolled<FT>
+): React.ReactNode;
+
+export function FilterBar<FT extends Record<string, FilterDef>>(
+  props: FilterBarStateUncontrolled<FT> | FilterBarStateControlled<FT>
+): React.ReactNode {
+  const { filterState, filterTypes, setFilterState } =
+    "filterState" in props
+      ? useFilterBarStateControlled(props as FilterBarStateControlled<FT>)
+      : useFilterBarStateUnControlled(props as FilterBarStateUncontrolled<FT>);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -91,4 +104,4 @@ export const FilterBar = <FT extends Record<string, FilterDef>>(
       </Menu>
     </Paper>
   );
-};
+}
