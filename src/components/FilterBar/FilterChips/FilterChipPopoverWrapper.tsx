@@ -9,13 +9,13 @@ import {
 import { ArrowDropDownIcon } from "@mui/x-date-pickers";
 import { PropsWithChildren, useMemo, useState } from "react";
 import { FilterChipProps } from "../types";
-import { CloseIcon } from "utils/Icons";
 
 export function FilterChipPopoverWrapper<V, P>(
   props: PropsWithChildren<
     FilterChipProps<V, P> & { displayValues: (v: V[]) => string }
   >
 ) {
+
   const { filterType, value, removeFromBar, displayValues, children } = props;
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
@@ -38,6 +38,7 @@ export function FilterChipPopoverWrapper<V, P>(
           clickable
           onClick={(event) => setAnchorEl(event.currentTarget)}
           size="small"
+          onDelete={removeFromBar}
         />
       </Tooltip>
       <Popover
@@ -50,16 +51,7 @@ export function FilterChipPopoverWrapper<V, P>(
         }}
         keepMounted
       >
-        <Stack>
-          <IconButton
-            onClick={() => removeFromBar()}
-            size="small"
-            sx={{ alignSelf: "flex-end", mt: 1, mr: 1 }}
-          >
-            <CloseIcon fontSize={"small"} />
-          </IconButton>
-          {children}
-        </Stack>
+        <Stack>{children}</Stack>
       </Popover>
     </>
   );

@@ -96,6 +96,7 @@ export function RestAutocompleteInput<
       }
       getOptionLabel={getOptionLabel}
       getOptionDisabled={getOptionDisabled}
+      getOptionKey={getOptionId}
       filterOptions={(x) => x}
       options={options}
       loading={loading}
